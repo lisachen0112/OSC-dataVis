@@ -2,25 +2,16 @@
 <html>
   <head>
     <title>OSC data visualisation</title>
-    <script src="https://cdn.jsdelivr.net/npm/vega@5.28.0"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.18.1"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.25.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>    
     <script type="text/javascript" src="./vega-lite.js" defer></script>
   </head>
   <body>
     <h1>OSC data visualisation</h1>
-    <div id="vis"></div>
+    <div id="barChart"></div>
+    <div id="scatterPlot"></div>
   </body> 
   <script>
-    const socket = new WebSocket('ws://localhost:8080');
 
-    socket.addEventListener('open', function (event) {
-      console.log('Client connects to WS server');
-    });
-
-    // Listen for messages
-    socket.addEventListener('message', function (event) {
-      console.log(event.data);
-    });
   </script>
 </html>
