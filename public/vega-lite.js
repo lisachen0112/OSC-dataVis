@@ -4,25 +4,11 @@ socket.addEventListener('open', function (event) {
   console.log('Client connects to WS server');
 });
 
-// Listen for messages
-// socket.addEventListener('message', function (event) {
-//   var data = JSON.parse(event.data);
-//   console.log(data);
-// //   if (data.args == 0) {
-// //     console.log('received 0');
-// //     if (view) {
-// //         view.signal("highlightIndex", 1).run();
-// //     }
-// //   }
-// });
-
 // Errors
 socket.addEventListener('error', function (event) {
   console.error('WebSocket error observed:', event);
 });
 
-var highlightIndex = 3; // Initial index of the bar to highlight (1-based)
-var tooltip = false;
 
 var vegaSpec = {
     "$schema": "https://vega.github.io/schema/vega/v5.json",
@@ -31,10 +17,14 @@ var vegaSpec = {
     "padding": 5,
     "signals": [
         {
-            "name": "highlightIndex",
-            "value": highlightIndex,
+            "name": "selectIndex",
+            "update":  "round((length(data('table')) - 1) * selectIndex + 1)",
+        },
+        {
+            "name": "tooltip",
+            "value": false,
             "on": [
-                {"events": "window:mouseup", "update": "highlightIndex"}
+                {"events": "window:mouseup", "update": "tooltip"}
             ]
         }
     ],
@@ -84,38 +74,33 @@ var vegaSpec = {
                 "update": {
                     "fill": [
                         {
-                            "test": "datum.index === round((length(data('table')) - 1) * highlightIndex + 1)",
+                            "test": "datum.index === selectIndex",
                             "value": "red"
                         },
                         {"value": "#4C78A8"}
                     ]
                 }
             }
-        },
-        {
-            "type": "point",
-            "tooltip": true
         }
     ]
 };
 
 vegaEmbed('#vis', vegaSpec).then(({ spec, view }) => {
-    // Initialize the highlight index signal
-    view.signal("highlightIndex", highlightIndex).run();
-
-    // Function to update the highlight index dynamically
     function updateHighlight(newIndex) {
-        view.signal("highlightIndex", newIndex).run();
+        view.signal("selectIndex", newIndex).run()
+    }
+
+    function showTooltip() {
+        view.signal("tooltip", true).run();
     }
 
     // Listen for messages from the server
     socket.addEventListener('message', function (event) {
         var data = JSON.parse(event.data);
         console.log(data);
-        if (view) {
-            view.signal("highlightIndex", data.args).run();
+        if (data.address == "/fader1") {
+            updateHighlight(data.args);
         }
     });
+
 }).catch(console.error); 
-
-
