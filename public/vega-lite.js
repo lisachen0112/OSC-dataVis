@@ -1,4 +1,5 @@
 const socket = new WebSocket('ws://localhost:8080');
+var mode = 0; // default mode 0
 
 socket.addEventListener('open', function (event) {
   console.log('Client connects to WS server');
@@ -9,6 +10,15 @@ socket.addEventListener('error', function (event) {
   console.error('WebSocket error observed:', event);
 });
 
+// Listen for messages from the server
+socket.addEventListener('message', function (event) {
+    var data = JSON.parse(event.data);
+    if (data.address == "/modeRadio") {
+        mode = data.args;
+        console.log("Changed mode to " + mode);
+    }
+});
+
 
 var barChart = {
     "$schema": "https://vega.github.io/schema/vega/v5.json",
@@ -16,6 +26,8 @@ var barChart = {
     "height": 200,
     "padding": 5,
     "signals": [
+        { "name": "yrange", "update": "[height * zoom, 0]"},
+        { "name": "xrange", "update": "[0, width * zoom]"},
         {
             "name": "selectIndex",
             "update":  "round((length(data('table')) - 1) * selectIndex + 1)",
@@ -24,7 +36,13 @@ var barChart = {
             "name": "tooltip",
             "value": false, 
             "update": "tooltip"
-        }
+        },
+        {
+            "name": "zoom",
+            "value": 0.5,
+            "update": "pow(2, (zoom - 0.5) * 2)"
+        },
+        
     ],
     "data": [
         {
@@ -44,14 +62,14 @@ var barChart = {
             "name": "xscale",
             "type": "band",
             "domain": {"data": "table", "field": "category"},
-            "range": "width",
+            "range": {"signal": "xrange"},
             "padding": 0.1
         },
         {
             "name": "yscale",
             "domain": {"data": "table", "field": "value"},
             "nice": true,
-            "range": "height"
+            "range": {"signal": "yrange"}
         }
     ],
     "axes": [
@@ -338,6 +356,11 @@ var scatterPlot = {
   
 
 vegaEmbed('#barChart', barChart).then(({ spec, view }) => {
+    var isHovering = false; 
+
+    view.addEventListener('mouseover', () => {isHovering = true;});
+    view.addEventListener('mouseout', () => {isHovering = false;});
+
     function select(newIndex) {
         view.signal("selectIndex", newIndex).run()
     }
@@ -346,19 +369,48 @@ vegaEmbed('#barChart', barChart).then(({ spec, view }) => {
         view.signal("tooltip", show == 1).run();
     }
 
-    // Listen for messages from the server
-    socket.addEventListener('message', function (event) {
-        var data = JSON.parse(event.data);
-        console.log(data);
-        if (data.address == "/fader1") {
-            select(data.args);
+    function zoom(newZoom) {
+        view.signal("zoom", newZoom).run();
+    }
+
+    function OSCtoCommand(oscMsg) {
+        if (!isHovering) {
+            return;
         }
 
-        if (data.address == "/button1") {
-            tooltip(data.args);
+        var data = JSON.parse(oscMsg);
+        console.log(data);
+    
+        if (data.address == "/fader1") {
+            console.log(mode);
+            if (mode == 0) {
+                select(data.args);
+            }
+            else if (mode == 1){
+                zoom(data.args);
+            }
         }
+    
+        if (data.address == "/button1") {
+            if (mode == 0) {
+                tooltip(data.args);
+            }
+            else if (mode == 1) {
+                zoom(0.5);
+            }
+            else {
+                console.log("Command not found")
+            }
+        }
+    }
+
+    // Listen for messages from the server
+    socket.addEventListener('message', function (event) {
+        OSCtoCommand(event.data);
     });
 
 }).catch(console.error); 
 
 vegaEmbed('#scatterPlot', scatterPlot)
+
+
