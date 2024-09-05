@@ -1,0 +1,103 @@
+{
+    "$schema": "https://vega.github.io/schema/vega/v5.json",
+    "description": "An interactive scatter plot example supporting pan and zoom.",
+    "width": 500,
+    "height": 300,
+    "padding": 5,
+    "signals": [
+      {
+        "name": "margin"
+      },
+      { "name": "xrange", "update": "[0, width]" },
+      { "name": "yrange", "update": "[height, 0]" },
+      {
+        "name": "zoom"
+      },
+  
+      {
+        "name": "xdom", 
+        "update": "slice(xext)",
+        "on": [
+          {
+            "events": {"signal": "zoom"},
+            "update": "[xext[0] / zoom, xext[1] / zoom]"
+          }
+        ]
+      },
+      {
+        "name": "ydom",
+        "update": "slice(yext)",
+        "on": [
+          {
+            "events": {"signal": "zoom"},
+            "update": "[yext[0] / zoom, yext[1] / zoom]"
+          }
+        ]
+      },
+      {
+        "name": "size",
+        "update": "clamp(20 / span(xdom), 1, 1000)"
+      }
+    ],
+  
+    "data": [
+      {
+        "name": "points",
+        "url": "data/normal-2d.json",
+        "transform": [
+          { "type": "extent", "field": "u", "signal": "xext" },
+          { "type": "extent", "field": "v", "signal": "yext" }
+        ]
+      }
+    ],
+  
+    "scales": [
+      {
+        "name": "xscale", 
+        "domain": {"signal": "xdom"},
+        "range": {"signal": "xrange"}
+      },
+      {
+        "name": "yscale",
+        "domain": {"signal": "ydom"},
+        "range": {"signal": "yrange"}
+      }
+    ],
+  
+    "axes": [
+      {
+        "scale": "xscale",
+        "orient": "bottom",
+        "tickColor": "white",
+        "labelColor": "white"
+      },
+      {
+        "scale": "yscale",
+        "orient": "left",
+        "tickColor": "white",
+        "labelColor": "white"
+      }
+    ],
+  
+    "marks": [
+      {
+        "type": "symbol",
+        "from": {"data": "points"},
+        "clip": true,
+        "encode": {
+          "enter": {
+            "fillOpacity": {"value": 0.8},
+            "fill": {"value": "#BB86FC"}
+          },
+          "update": {
+            "x": {"scale": "xscale", "field": "u"},
+            "y": {"scale": "yscale", "field": "v"},
+            "size": {"signal": "size"}
+          },
+          "leave":   { "fill": {"value": "#BB86FC"} },
+          "select":  { "size": {"signal": "size", "mult": 5} },
+          "release": { "size": {"signal": "size"} }
+        }
+      }
+    ]
+}

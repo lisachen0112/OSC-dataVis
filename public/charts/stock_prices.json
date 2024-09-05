@@ -1,0 +1,19 @@
+{
+    "$schema": "https://vega.github.io/schema/vega/v5.json",
+    "width": 500,
+    "height": 300,
+    "padding": 5,
+
+    "data": [
+        {
+            "name": "stocks",
+            "url": "data/historical_stock_prices.json"
+        }
+    ], 
+    "mark": "line",
+    "encoding": {
+      "x": { "field": "date", "type": "temporal", "title": "Date" },
+      "y": { "field": "price", "type": "quantitative", "title": "Price" },
+      "color": { "field": "ticker", "type": "nominal", "title": "Ticker" }
+    }
+}

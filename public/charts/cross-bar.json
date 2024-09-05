@@ -1,0 +1,195 @@
+{
+    "$schema": "https://vega.github.io/schema/vega/v5.json",
+    "description": "Interactive cross-filtering among histograms of flight statistics.",
+    "width": 500,
+    "padding": 5,
+  
+    "signals": [
+      { "name": "chartHeight", "value": 100 },
+      { "name": "chartPadding", "value": 50 },
+      { "name": "height", "update": "(chartHeight + chartPadding) * 3" },
+      { "name": "delayExtent", "value": [-60, 180] },
+      { "name": "delayStep", "value": 10,
+        "bind": {"input": "range", "min": 2, "max": 20, "step": 1} },
+      { "name": "delayRange", "update": "delayExtent",
+        "on": [
+          {
+            "events": {"signal": "delayZoom"},
+            "update": "[(delayRange[0]+delayRange[1])/2 - delayZoom, (delayRange[0]+delayRange[1])/2 + delayZoom]"
+          },
+          {
+            "events": "@delay:dblclick!, @delayBrush:dblclick!",
+            "update": "[delayExtent[0], delayExtent[1]]"
+          },
+          {
+            "events": "[@delayBrush:pointerdown, window:pointerup] > window:pointermove!",
+            "update": "[delayRange[0] + invert('delayScale', x()) - invert('delayScale', xmove), delayRange[1] + invert('delayScale', x()) - invert('delayScale', xmove)]"
+          },
+          {
+            "events": "[@delay:pointerdown, window:pointerup] > window:pointermove!",
+            "update": "[min(delayAnchor, invert('delayScale', x())), max(delayAnchor, invert('delayScale', x()))]"
+          }
+        ]
+      },
+      { "name": "delayZoom", "value": 0,
+        "on": [{
+          "events": "@delay:wheel!, @delayBrush:wheel!",
+          "update": "0.5 * abs(span(delayRange)) * pow(1.0005, event.deltaY * pow(16, event.deltaMode))"
+        }]
+      },
+      { "name": "delayAnchor", "value": 0,
+        "on": [{
+          "events": "@delay:pointerdown!",
+          "update": "invert('delayScale', x())"}
+        ]
+      },
+      { "name": "xmove", "value": 0,
+        "on": [{"events": "window:pointermove", "update": "x()"}]
+      }
+    ],
+  
+    "data": [
+      {
+        "name": "flights",
+        "url": "data/flights-200k.json",
+        "transform": [
+          {
+            "type": "bin", "field": "delay",
+            "extent": {"signal": "delayExtent"},
+            "step": {"signal": "delayStep"},
+            "as": ["delay0", "delay1"]
+          }
+        ]
+      }
+    ],
+  
+    "scales": [
+      {
+        "name": "delayScale",
+        "type": "linear",
+        "round": true,
+        "domain": {"signal": "delayExtent"},
+        "range": "width"
+      }
+    ],
+  
+    "marks": [
+      {
+        "name": "delay",
+        "type": "group",
+        "encode": {
+          "enter": {
+            "y": { "value": "delay", "offset": 20},
+            "width": {"signal": "width"},
+            "height": {"signal": "chartHeight"},
+            "fill": {"value": "transparent"}
+          }
+        },
+  
+        "data": [
+          {
+            "name": "delay-bins",
+            "source": "flights",
+            "transform": [
+              {
+                "type": "aggregate",
+                "groupby": ["delay0", "delay1"],
+                "key": "delay0", "drop": false
+              }
+            ]
+          }
+        ],
+  
+        "scales": [
+          {
+            "name": "yscale",
+            "type": "linear",
+            "domain": {"data": "delay-bins", "field": "count"},
+            "range": [{"signal": "chartHeight"}, 0]
+          }
+        ],
+  
+        "axes": [
+          {"orient": "bottom", "scale": "delayScale"}
+        ],
+  
+        "marks": [
+          {
+            "type": "rect",
+            "name": "delayBrush",
+            "encode": {
+              "enter": {
+                "y": {"value": 0},
+                "height": {"signal": "chartHeight"},
+                "fill": {"value": "#fcfcfc"}
+              },
+              "update": {
+                "x": {"signal": "scale('delayScale', delayRange[0])"},
+                "x2": {"signal": "scale('delayScale', delayRange[1])"}
+              }
+            }
+          },
+          {
+            "type": "rect",
+            "interactive": false,
+            "from": {"data": "delay-bins"},
+            "encode": {
+              "enter": {
+                "fill": {"value": "steelblue"}
+              },
+              "update": {
+                "x": {"scale": "delayScale", "field": "delay0"},
+                "x2": {"scale": "delayScale", "field": "delay1", "offset": -1},
+                "y": {"scale": "yscale", "field": "count"},
+                "y2": {"scale": "yscale", "value": 0}
+              }
+            }
+          },
+          {
+            "type": "rect",
+            "interactive": false,
+            "encode": {
+              "enter": {
+                "y": {"value": 0},
+                "height": {"signal": "chartHeight"},
+                "fill": {"value": "firebrick"}
+              },
+              "update": {
+                "x": {"signal": "scale('delayScale', delayRange[0])"},
+                "width": {"value": 1}
+              }
+            }
+          },
+          {
+            "type": "rect",
+            "interactive": false,
+            "encode": {
+              "enter": {
+                "y": {"value": 0},
+                "height": {"signal": "chartHeight"},
+                "fill": {"value": "firebrick"}
+              },
+              "update": {
+                "x": {"signal": "scale('delayScale', delayRange[1])"},
+                "width": {"value": 1}
+              }
+            }
+          },
+          {
+            "type": "text",
+            "interactive": false,
+            "encode": {
+              "enter": {
+                "y": {"value": -5},
+                "text": {"value": "Arrival Delay (min)"},
+                "baseline": {"value": "bottom"},
+                "fontSize": {"value": 14},
+                "fontWeight": {"value": 500},
+                "fill": {"value": "white"}
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }

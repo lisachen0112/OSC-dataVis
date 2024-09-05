@@ -1,0 +1,110 @@
+{
+    "$schema": "https://vega.github.io/schema/vega/v5.json",
+    "width": 500,
+    "height": 300,
+    "padding": 5,
+    "signals": [
+        { "name": "yrange", "update": "[height * zoom, 0]"},
+        { "name": "xrange", "update": "[0, width * zoom]"},
+        {
+            "name": "selectIndex",
+            "update": "round((length(data('table')) - 1) * selectIndex + 1)"
+        },
+        {
+            "name": "tooltip",
+            "value": false, 
+            "update": "tooltip"
+        },
+        {
+            "name": "zoom",
+            "value": 0.5,
+            "update": "pow(2, (zoom - 0.5) * 2)"
+        },
+        {
+            "name": "ydom",
+            "update": "[0, extent[1]]",
+            "on": [
+                {
+                    "events": {"signal": "zoom"},
+                    "update": "[0, zoom]"
+                }
+            ]
+        }
+    ],
+    "data": [
+        {
+            "name": "table",
+            "values": [
+                {"category": "A", "value": 28}, {"category": "B", "value": 55}, {"category": "C", "value": 43},
+                {"category": "D", "value": 91}, {"category": "E", "value": 81}, {"category": "F", "value": 53},
+                {"category": "G", "value": 19}, {"category": "H", "value": 87}, {"category": "I", "value": 52}
+            ],
+            "transform": [
+                {"type": "extent", "field": "value", "signal": "extent"},
+                {"type": "window", "ops": ["row_number"], "as": ["index"]}
+            ]
+        }
+    ],
+    "scales": [
+        {
+            "name": "xscale",
+            "type": "band",
+            "domain": {"data": "table", "field": "category"},
+            "range": {"signal": "xrange"},
+            "padding": 0.1
+        },
+        {
+            "name": "yscale",
+            "domain": {"data": "table", "field": "value"},
+            "nice": true,
+            "range": {"signal": "yrange"}
+        }
+    ],
+    "axes": [
+        {"orient": "bottom", "scale": "xscale", "tickColor": "white", "labelColor": "white"},
+        {"orient": "left", "scale": "yscale", "tickColor": "white", "labelColor": "white"}
+    ],
+    "marks": [
+        {
+            "type": "rect",
+            "from": {"data": "table"},
+            "encode": {
+                "enter": {
+                    "x": {"scale": "xscale", "field": "category"},
+                    "width": {"scale": "xscale", "band": 1},
+                    "y": {"scale": "yscale", "field": "value"},
+                    "y2": {"scale": "yscale", "value": 0}
+                },
+                "update": {
+                    "fill": [
+                        {
+                            "test": "datum.index === selectIndex",
+                            "value": "#03DAC6"
+                        },
+                        {"value": "#BB86FC"}
+                    ]
+                }
+            }
+        },
+        {
+            "type": "text",
+            "from": {"data": "table"},
+            "encode": {
+                "enter": {
+                    "x": {"scale": "xscale", "field": "category", "band": 0.5},
+                    "y": {"scale": "yscale", "field": "value", "offset": -5},
+                    "align": {"value": "center"},
+                    "baseline": {"value": "bottom"},
+                    "fill": {"value": "white"},
+                    "fontSize": {"value": 12}, 
+                    "fontWeight": {"value": "bold"}
+                }, 
+                "update": {
+                    "text": {
+                        "signal": "(tooltip && datum.index === selectIndex) ? datum.category + ': ' + datum.value : ''"
+                    }
+                }
+            }
+        }
+    ]
+}
