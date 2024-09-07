@@ -14,7 +14,7 @@ const osc = require('osc');
 //     const endDate = new Date();
 //     const startDate = moment().subtract(6, 'months').toDate();
 
-//     const historicalData = {};
+//     const historicalData = [];
 
 //     for (const ticker of tickers) {
 //         try {
@@ -25,7 +25,19 @@ const osc = require('osc');
 //                 interval: '1d'
 //             });
 
-//             historicalData[ticker] = data;
+//             // Push each stock's data into the array with a ticker label
+//             data.forEach(entry => {
+//                 historicalData.push({
+//                     ticker: ticker,
+//                     date: entry.date,
+//                     open: entry.open,
+//                     high: entry.high,
+//                     low: entry.low,
+//                     close: entry.close,
+//                     adjClose: entry.adjClose,
+//                     volume: entry.volume
+//                 });
+//             });
 //         } catch (error) {
 //             console.error(`Error fetching historical data for ${ticker}:`, error);
 //         }

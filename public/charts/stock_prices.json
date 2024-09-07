@@ -6,14 +6,75 @@
 
     "data": [
         {
-            "name": "stocks",
-            "url": "data/historical_stock_prices.json"
+            "name": "stock", 
+            "url": "data/historical_stock_prices.json",
+            "transform": [
+        {
+            "type": "formula",
+            "expr": "toDate(datum.date)",  
+            "as": "date"
+        }
+    ]
         }
     ], 
-    "mark": "line",
-    "encoding": {
-      "x": { "field": "date", "type": "temporal", "title": "Date" },
-      "y": { "field": "price", "type": "quantitative", "title": "Price" },
-      "color": { "field": "ticker", "type": "nominal", "title": "Ticker" }
-    }
+    "scales": [
+        {
+          "name": "x",
+          "type": "time",
+          "range": "width",
+          "domain": {"data": "stock", "field": "date"}
+        },
+        {
+          "name": "y",
+          "type": "linear",
+          "range": "height",
+          "nice": true,
+          "zero": true,
+          "domain": {"data": "stock", "field": "close"}
+        },
+        {
+          "name": "color",
+          "type": "ordinal",
+          "range": "category",
+          "domain": {"data": "stock", "field": "ticker"}
+        }
+      ],
+      "axes": [
+        {"orient": "bottom", "scale": "x"},
+        {"orient": "left", "scale": "y"}
+      ],
+    
+      "marks": [
+        {
+          "type": "group",
+          "from": {
+            "facet": {
+              "name": "series",
+              "data": "stock",
+              "groupby": "ticker"
+            }
+          },
+          "marks": [
+            {
+              "type": "line",
+              "from": {"data": "series"},
+              "encode": {
+                "enter": {
+                  "x": {"scale": "x", "field": "date"},
+                  "y": {"scale": "y", "field": "close"},
+                  "stroke": {"scale": "color", "field": "ticker"},
+                  "strokeWidth": {"value": 2}
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "legends": [
+        {
+          "fill": "color",
+          "title": "Stock Ticker",
+          "orient": "right"
+        }
+      ]
 }
