@@ -15,10 +15,6 @@ socket.addEventListener('error', function (event) {
 socket.addEventListener('message', function (event) {
 
     var data = JSON.parse(event.data);
-    console.log(data);
-    // if (data.type === 'stockData') { 
-    //     console.log(data);
-    // }
 
     if (data.address == "/modeRadio") {
         mode = data.args;
@@ -28,12 +24,79 @@ socket.addEventListener('message', function (event) {
 
 });
 
-fetch('charts/stock_prices.json')
+
+fetch('charts/stock-vega-lite.json')
 .then(response => response.json())
 .then(spec => {
-    vegaEmbed('#barChart', spec).then(({ spec, view }) => {
+    vegaEmbed('#barChart', spec).then(({spec, view}) => {
+
+        // function minBound(val) {
+        //     var currRange = spec.vconcat[1].params[0].value.date;
+        //     currRange = [currRange[0] - val, currRange[1]];
+
+        //     console.log(spec);
+
+        //     // Render the updated spec
+        //     vegaEmbed('#barChart', spec).then(({spec, view}) => {
+        //         chartView = view;
+        //     }).catch(console.error);
+        // }
+
+        function minBound(val) {
+            // Define the new bounds for the brush
+            var newBounds = [1709596800000, view.signal('brush').date[1]];
+            console.log(newBounds);
+            // Update the brush signal with new bounds
+            view.signal('brush', {date: newBounds}).run();
+            
+            // Notify Vega-Lite to update the visualization
+            // view.runAsync().catch(console.error);
+        }
+
+
+        function OSCtoCommand(oscMsg) {
+    
+            var data = JSON.parse(oscMsg);
+            // console.log(data);
+        
+            if (data.address == "/minRadial") {
+                minBound(data.args);
+            }
+        }
+        // Listen for changes to the 'brush' signal
+        view.addSignalListener('brush', (name, value) => {
+            console.log('Brush signal changed:', value);
+        });
+
+        // Listen for messages from the server
+        socket.addEventListener('message', function (event) {
+            OSCtoCommand(event.data);
+        });
+        
     }).catch(console.error); 
 });
+
+// fetch('charts/stock_prices.json')
+// .then(response => response.json())
+// .then(spec => {
+//     vegaEmbed('#barChart', spec).then(({ spec, view }) => {
+
+//         function OSCtoCommand(oscMsg) {    
+//             var data = JSON.parse(oscMsg);
+//             console.log(data);
+        
+//             if (data.address == "/searchButton") {
+//                 search();
+//             }
+//         }
+
+//         // Listen for messages from the server
+//         socket.addEventListener('message', function (event) {
+//             OSCtoCommand(event.data);
+//         });
+
+//     }).catch(console.error); 
+// });
 
 
 // fetch('charts/bar.json')

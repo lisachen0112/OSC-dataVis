@@ -1,22 +1,53 @@
 {
     "$schema": "https://vega.github.io/schema/vega/v5.json",
-    "width": 500,
+    "width": 650,
     "height": 300,
     "padding": 5,
-
+    "signals": [
+        { "name": "select", "value": "TSLA" },
+        {
+            "name": "minClose",
+            "update": "data('stock_stats')[0].minClose"
+          },
+          {
+            "name": "maxClose",
+            "update": "data('stock_stats')[0].maxClose"
+          },
+          {
+            "name": "adjustedMaxClose",
+            "update": "maxClose + (maxClose - minClose) * 0.2"
+          }
+    ],
     "data": [
         {
             "name": "stock", 
             "url": "data/historical_stock_prices.json",
             "transform": [
+                {
+                    "type": "formula",
+                    "expr": "toDate(datum.date)",  
+                    "as": "date"
+                },
+                {
+                    "type": "filter",
+                    "expr": "datum.ticker === select"
+                }
+            ]
+        },
         {
-            "type": "formula",
-            "expr": "toDate(datum.date)",  
-            "as": "date"
-        }
-    ]
+          "name": "stock_stats",
+          "source": "stock",
+          "transform": [
+            {
+              "type": "aggregate",
+              "fields": ["close", "close"],
+              "ops": ["min", "max"],
+              "as": ["minClose", "maxClose"]
+            }
+          ]
         }
     ], 
+
     "scales": [
         {
           "name": "x",
@@ -30,7 +61,7 @@
           "range": "height",
           "nice": true,
           "zero": true,
-          "domain": {"data": "stock", "field": "close"}
+          "domain": {"signal": "[0, adjustedMaxClose]"}
         },
         {
           "name": "color",
@@ -68,13 +99,6 @@
               }
             }
           ]
-        }
-      ],
-      "legends": [
-        {
-          "fill": "color",
-          "title": "Stock Ticker",
-          "orient": "right"
         }
       ]
 }
