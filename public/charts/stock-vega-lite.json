@@ -12,10 +12,21 @@
         {
           "op": "mean",
           "field": "close",
-          "as": "rolling_mean"
+          "as": "MVGA7"
         }
       ],
       "frame": [-6, 0],
+      "groupby" : ["ticker"]
+    },
+    {
+      "window": [
+        {
+          "op": "mean",
+          "field": "close",
+          "as": "MVGA30"
+        }
+      ],
+      "frame": [-29, 0],
       "groupby" : ["ticker"]
     }
   ],
@@ -37,8 +48,18 @@
         "mark": "line",
         "encoding": {
           "x": {"field": "date", "type": "temporal", "scale": {"domain": {"param": "brush"}}},
-          "y": {"field": "rolling_mean", "type": "quantitative"},
+          "y": {"field": "MVGA7", "type": "quantitative"},
           "color": {"value": "red"},
+          "size": {"value": 1},
+          "opacity": {"value": 0.5}
+        }
+      },
+      {
+        "mark": "line",
+        "encoding": {
+          "x": {"field": "date", "type": "temporal", "scale": {"domain": {"param": "brush"}}},
+          "y": {"field": "MVGA30", "type": "quantitative"},
+          "color": {"value": "orange"},
           "size": {"value": 1},
           "opacity": {"value": 0.5}
         }
