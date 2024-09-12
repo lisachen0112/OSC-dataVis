@@ -21,8 +21,21 @@ socket.addEventListener('message', function (event) {
         console.log("Changed mode to " + mode);
     }
 
+    if (data.address == "/searchButton" && data.args == 1) {
+        search();
+    }
 
 });
+
+function search() {
+
+  const select = document.getElementById('tickerSelect');
+
+  // Simulate a click event to open the dropdown
+  select.focus();
+  // select.click();  // Simulate a click to open the dropdown
+  select.size = 4;
+}
 
 
 fetch('charts/stock-vega-lite.json')
@@ -31,7 +44,7 @@ fetch('charts/stock-vega-lite.json')
     vegaEmbed('#barChart', spec).then(({spec, view}) => {
 
         // function minBound(val) {
-        //     var currRange = spec.vconcat[1].params[0].value.date;
+        //     var currRange = spec.vconcat[1].params[0].value.x;
         //     currRange = [currRange[0] - val, currRange[1]];
 
         //     console.log(spec);
@@ -42,15 +55,77 @@ fetch('charts/stock-vega-lite.json')
         //     }).catch(console.error);
         // }
 
-        function minBound(val) {
-            // Define the new bounds for the brush
-            var newBounds = [1709596800000, view.signal('brush').date[1]];
-            console.log(newBounds);
-            // Update the brush signal with new bounds
-            view.signal('brush', {date: newBounds}).run();
+        // function minBound(val) {
+        //     // Define the new bounds for the brush
+        //     var newBounds = [1719596800000, view.signal('brush').date[1]];
+        //     console.log(newBounds);
+        //     // Update the brush signal with new bounds
+        //     view.signal('brush', {"date": newBounds}).run();
             
-            // Notify Vega-Lite to update the visualization
-            // view.runAsync().catch(console.error);
+        //     // Notify Vega-Lite to update the visualization
+        //     // view.runAsync().catch(console.error);
+        // }
+
+        function changeChart(val) {
+          if (val == 0 ){   
+                // line chart
+                spec.vconcat[0].layer[0].layer = [{
+                    "mark": "line",
+                    "encoding": {
+                      "y": {"field": "close", "type": "quantitative"}
+                    }           
+                  }]
+          }
+
+          else if (val == 1) {
+              // bar chart
+              spec.vconcat[0].layer[0].layer = [{
+                  "mark": {"type":"bar", "binSpacing": 0},
+                  "encoding": {
+                    "y": {"field": "close", "type": "quantitative"}
+                  }           
+                }]
+          }
+
+          else if (val == 2) {
+              // candlestick chart
+              spec.vconcat[0].layer[0].layer =
+              [
+                  {
+                    "mark": "rule",
+                    "encoding": {
+                      "y": {"field": "low"},
+                      "y2": {"field": "high"},
+                      "color": {
+                        "condition": {
+                          "test": "datum.open < datum.close",
+                          "value": "#06982d"
+                        },
+                        "value": "#ae1325"
+                      }
+                    }
+                  },
+                  {
+                    "mark": "bar",
+                    "encoding": {
+                      "y": {"field": "open"},
+                      "y2": {"field": "close"},
+                      "color": {
+                        "condition": {
+                          "test": "datum.open < datum.close",
+                          "value": "#06982d"
+                        },
+                        "value": "#ae1325"
+                      }
+                    }
+                  }]
+          }
+
+          // Render the updated spec
+          vegaEmbed('#barChart', spec).then(({spec, view}) => {
+              chartView = view;
+          }).catch(console.error);
+
         }
 
 
@@ -62,15 +137,34 @@ fetch('charts/stock-vega-lite.json')
             if (data.address == "/minRadial") {
                 minBound(data.args);
             }
+            else if (data.address == "/radio1") {
+                changeChart(data.args);
+            }
         }
+
         // Listen for changes to the 'brush' signal
         view.addSignalListener('brush', (name, value) => {
-            console.log('Brush signal changed:', value);
+          console.log('Brush signal changed:', value);
         });
+      
 
         // Listen for messages from the server
         socket.addEventListener('message', function (event) {
             OSCtoCommand(event.data);
+        });
+
+        // Event listener to reset size to 1 when an option is clicked
+        document.getElementById('tickerSelect').addEventListener('click', function() {
+          this.size = 1; // Reset to default dropdown size
+          spec.transform[0].filter = "datum.ticker === '" + this.value + "'";
+
+
+          // Render the updated spec
+          vegaEmbed('#barChart', spec).then(({spec, view}) => {
+            chartView = view;
+          }).catch(console.error);
+        
+
         });
         
     }).catch(console.error); 
