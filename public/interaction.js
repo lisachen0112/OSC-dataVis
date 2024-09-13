@@ -1,6 +1,9 @@
 const socket = new WebSocket('ws://localhost:8080');
 
 var mode = 0; // default mode 0
+var activeTicker = 0;
+var tickers = ['AMZN', 'AAPL', 'NFLX', 'TSLA']
+var scroll_val = 0;
 
 socket.addEventListener('open', function (event) {
   console.log('Client connects to WS server');
@@ -25,17 +28,89 @@ socket.addEventListener('message', function (event) {
         search();
     }
 
+    if (data.address == "/searchButton" && data.args == 0) {
+      closeSearch();
+    }
+
+    if (data.address == "/scroll") {
+      console.log(data.args);
+      scroll(data.args);
+    }
 });
 
-function search() {
+function scroll(val) {
+  if (document.getElementById('tickerSelect').style.display == 'flex') {
+    var option = document.getElementById('options-container');
 
-  const select = document.getElementById('tickerSelect');
+    const threshold = 0.5;  // Arbitrary midpoint value to detect wrap-around
+    let delta = val- scroll_val;
 
-  // Simulate a click event to open the dropdown
-  select.focus();
-  // select.click();  // Simulate a click to open the dropdown
-  select.size = 4;
+    if (scroll_val > threshold && val< threshold) {
+      delta = (val + 1) - scroll_val;
+    } else if (scroll_val < threshold && val > threshold) {
+      delta = val - (scroll_val+ 1);  
+    }
+
+    scroll_val = val;
+
+    if (delta > 0) {
+        activeTicker++;
+        if (activeTicker > option.children.length - 1) {
+          activeTicker = 0;
+        }
+        console.log(activeTicker);
+        option.children[activeTicker].focus();
+      }
+    else if (delta < 0) {
+      activeTicker--;
+      if (activeTicker < 0) {
+        activeTicker = option.children.length - 1;
+      }
+      console.log(activeTicker);
+      option.children[activeTicker].focus();
+    }
+  }
+  
 }
+
+
+function closeSearch() {
+  if (document.getElementById('tickerSelect').style.display == 'flex') {
+    var option = document.getElementById('options-container');
+    option.children[activeTicker].click();
+
+    document.getElementById('tickerSelect').style.display = 'none';
+  }
+}
+
+function search() { 
+    document.getElementById('tickerSelect').style.display = 'flex';
+    var option = document.getElementById('options-container');
+
+    option.children[activeTicker].focus();
+
+    // document.addEventListener('keydown', function(e) {
+    //   if (e.key == 'ArrowDown') {
+    //     e.preventDefault();
+    //     if (activeTicker < option.children.length - 1) {
+    //       activeTicker++;
+    //       console.log(activeTicker);
+    //       option.children[activeTicker].focus();
+    //     }
+    //   }
+
+    //   else if (e.key == 'ArrowUp') {
+    //     e.preventDefault();
+    //     if (activeTicker > 0) {
+    //       activeTicker--;
+    //       console.log(activeTicker);
+    //       option.children[activeTicker].focus();
+    //     }
+    //   }
+    // }
+
+  }
+
 
 
 fetch('charts/stock-vega-lite.json')
@@ -155,9 +230,9 @@ fetch('charts/stock-vega-lite.json')
 
         // Event listener to reset size to 1 when an option is clicked
         document.getElementById('tickerSelect').addEventListener('click', function() {
-          this.size = 1; // Reset to default dropdown size
-          spec.transform[0].filter = "datum.ticker === '" + this.value + "'";
+          spec.transform[0].filter = "datum.ticker === '" + tickers[activeTicker] + "'";
 
+          console.log(spec.transform[0].filter);
 
           // Render the updated spec
           vegaEmbed('#barChart', spec).then(({spec, view}) => {

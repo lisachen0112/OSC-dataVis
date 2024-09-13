@@ -10,13 +10,39 @@
   </head>
   <body>
     <h1>OSC data visualisation</h1>
-    <label for="ticker">Choose a ticker:</label>
+    <!-- <label for="ticker">Choose a ticker:</label>
     <select name="ticker" id="tickerSelect">
       <option value="AMZN">AMZN</option>
       <option value="NFLX">NFLX</option>
       <option value="AAPL">AAPL</option>
       <option value="TSLA">TSLA</option>
-    </select>
+    </select> -->
+
+    <div class="select-box" id="tickerSelect">
+      <div>Select ticker</div>
+      <div class="options-container" id="options-container">
+        <div class="option" tabindex="0">
+          <input type="radio" class="radio" id="AMZN" name="category">
+          <label for="AMZN">AMZN</label>
+        </div>
+
+        <div class="option" tabindex="0">
+          <input type="radio" class="radio" id="AAPL" name="category">
+          <label for="AAPL">AAPL</label>
+        </div>
+
+        <div class="option" tabindex="0">
+          <input type="radio" class="radio" id="NFLX" name="category">
+          <label for="NFLX">NFLX</label>
+        </div>
+
+        <div class="option" tabindex="0">
+          <input type="radio" class="radio" id="TSLA" name="category">
+          <label for="TSLA">TSLA</label>
+        </div>
+
+      </div>
+    </div>
     <br>
     <div id="barChart"></div>
     <!-- <div id="scatterPlot"></div>
