@@ -24,92 +24,152 @@ socket.addEventListener('message', function (event) {
         console.log("Changed mode to " + mode);
     }
 
-    if (data.address == "/searchButton" && data.args == 1) {
+    if (data.address == "/searchButton" && data.args == 1 && mode == 0) {
         search();
     }
 
-    if (data.address == "/searchButton" && data.args == 0) {
+    if (data.address == "/searchButton" && data.args == 0 && mode == 0) {
       closeSearch();
     }
 
-    if (data.address == "/scroll") {
-      console.log(data.args);
+    if (data.address == "/scroll" && mode == 0) {
       scroll(data.args);
+    }
+
+    if (data.address == "/searchButton" && data.args == 1 && mode == 1) {
+      search();
+    }
+
+    if (data.address == "/searchButton" && data.args == 0 && mode == 1) {
+      closeSearch();
     }
 });
 
 function scroll(val) {
-  if (document.getElementById('tickerSelect').style.display == 'flex') {
-    var option = document.getElementById('options-container');
+  if (mode == 0) {
+    if (document.getElementById('tickerSelect').style.display == 'flex') {
+      var option = document.getElementById('options-container');
 
-    const threshold = 0.5;  // Arbitrary midpoint value to detect wrap-around
-    let delta = val- scroll_val;
+      const threshold = 0.5;  // Arbitrary midpoint value to detect wrap-around
+      let delta = val- scroll_val;
 
-    if (scroll_val > threshold && val< threshold) {
-      delta = (val + 1) - scroll_val;
-    } else if (scroll_val < threshold && val > threshold) {
-      delta = val - (scroll_val+ 1);  
-    }
+      if (scroll_val > threshold && val< threshold) {
+        delta = (val + 1) - scroll_val;
+      } else if (scroll_val < threshold && val > threshold) {
+        delta = val - (scroll_val+ 1);  
+      }
 
-    scroll_val = val;
+      scroll_val = val;
 
-    if (delta > 0) {
-        activeTicker++;
-        if (activeTicker > option.children.length - 1) {
-          activeTicker = 0;
+      if (delta > 0) {
+          activeTicker++;
+          if (activeTicker > option.children.length - 1) {
+            activeTicker = 0;
+          }
+          console.log(activeTicker);
+          option.children[activeTicker].focus();
+        }
+      else if (delta < 0) {
+        activeTicker--;
+        if (activeTicker < 0) {
+          activeTicker = option.children.length - 1;
         }
         console.log(activeTicker);
         option.children[activeTicker].focus();
       }
-    else if (delta < 0) {
-      activeTicker--;
-      if (activeTicker < 0) {
-        activeTicker = option.children.length - 1;
-      }
-      console.log(activeTicker);
-      option.children[activeTicker].focus();
     }
+  }
+  else if (mode == 1) {
+    if (document.getElementById('tickerSelect').style.display == 'flex') {}
   }
   
 }
 
-
 function closeSearch() {
-  if (document.getElementById('tickerSelect').style.display == 'flex') {
-    var option = document.getElementById('options-container');
-    option.children[activeTicker].click();
+  if (mode == 0) {
+    if (document.getElementById('tickerSelect').style.display == 'flex') {
+      var option = document.getElementById('options-container');
+      option.children[activeTicker].click();
 
-    document.getElementById('tickerSelect').style.display = 'none';
+      document.getElementById('tickerSelect').style.display = 'none';
+    }
+  }
+
+  else if (mode == 1) {
+    const addon = document.getElementById('addOns');
+    addon.classList.remove('show');
   }
 }
 
 function search() { 
+  if (mode == 0) {
     document.getElementById('tickerSelect').style.display = 'flex';
     var option = document.getElementById('options-container');
 
     option.children[activeTicker].focus();
-
-    // document.addEventListener('keydown', function(e) {
-    //   if (e.key == 'ArrowDown') {
-    //     e.preventDefault();
-    //     if (activeTicker < option.children.length - 1) {
-    //       activeTicker++;
-    //       console.log(activeTicker);
-    //       option.children[activeTicker].focus();
-    //     }
-    //   }
-
-    //   else if (e.key == 'ArrowUp') {
-    //     e.preventDefault();
-    //     if (activeTicker > 0) {
-    //       activeTicker--;
-    //       console.log(activeTicker);
-    //       option.children[activeTicker].focus();
-    //     }
-    //   }
-    // }
-
   }
+  else if (mode == 1) {
+    const addon = document.getElementById('addOns');
+    addon.classList.add('show');
+    const item = document.querySelectorAll('.item')[0];
+    console.log(item);
+    item.focus();
+  }
+}
+
+function selectChart(val) {
+  if (val == 0 ){   
+    // line chart
+    return [{
+        "mark": "line",
+        "encoding": {
+          "y": {"field": "close", "type": "quantitative"}
+        }           
+      }]
+  }
+
+  else if (val == 1) {
+    // bar chart
+    return [{
+        "mark": {"type":"bar", "binSpacing": 0},
+        "encoding": {
+          "y": {"field": "close", "type": "quantitative"}
+        }           
+      }]
+  }
+
+  else if (val == 2) {
+    // candlestick chart
+    return [{
+          "mark": "rule",
+          "encoding": {
+            "y": {"field": "low"},
+            "y2": {"field": "high"},
+            "color": {
+              "condition": {
+                "test": "datum.open < datum.close",
+                "value": "#06982d"
+              },
+              "value": "#ae1325"
+            }
+          }
+        },
+        {
+          "mark": "bar",
+          "encoding": {
+            "y": {"field": "open"},
+            "y2": {"field": "close"},
+            "color": {
+              "condition": {
+                "test": "datum.open < datum.close",
+                "value": "#06982d"
+              },
+              "value": "#ae1325"
+            }
+          }
+        }]
+  }
+}
 
 
 
@@ -141,69 +201,6 @@ fetch('charts/stock-vega-lite.json')
         //     // view.runAsync().catch(console.error);
         // }
 
-        function changeChart(val) {
-          if (val == 0 ){   
-                // line chart
-                spec.vconcat[0].layer[0].layer = [{
-                    "mark": "line",
-                    "encoding": {
-                      "y": {"field": "close", "type": "quantitative"}
-                    }           
-                  }]
-          }
-
-          else if (val == 1) {
-              // bar chart
-              spec.vconcat[0].layer[0].layer = [{
-                  "mark": {"type":"bar", "binSpacing": 0},
-                  "encoding": {
-                    "y": {"field": "close", "type": "quantitative"}
-                  }           
-                }]
-          }
-
-          else if (val == 2) {
-              // candlestick chart
-              spec.vconcat[0].layer[0].layer =
-              [
-                  {
-                    "mark": "rule",
-                    "encoding": {
-                      "y": {"field": "low"},
-                      "y2": {"field": "high"},
-                      "color": {
-                        "condition": {
-                          "test": "datum.open < datum.close",
-                          "value": "#06982d"
-                        },
-                        "value": "#ae1325"
-                      }
-                    }
-                  },
-                  {
-                    "mark": "bar",
-                    "encoding": {
-                      "y": {"field": "open"},
-                      "y2": {"field": "close"},
-                      "color": {
-                        "condition": {
-                          "test": "datum.open < datum.close",
-                          "value": "#06982d"
-                        },
-                        "value": "#ae1325"
-                      }
-                    }
-                  }]
-          }
-
-          // Render the updated spec
-          vegaEmbed('#barChart', spec).then(({spec, view}) => {
-              chartView = view;
-          }).catch(console.error);
-
-        }
-
-
         function OSCtoCommand(oscMsg) {
     
             var data = JSON.parse(oscMsg);
@@ -213,7 +210,11 @@ fetch('charts/stock-vega-lite.json')
                 minBound(data.args);
             }
             else if (data.address == "/radio1") {
-                changeChart(data.args);
+              spec.vconcat[0].layer[0].layer = selectChart(data.args);
+              // Render the updated spec
+              vegaEmbed('#barChart', spec).then(({spec, view}) => {
+                chartView = view;
+              }).catch(console.error);
             }
         }
 
@@ -228,7 +229,7 @@ fetch('charts/stock-vega-lite.json')
             OSCtoCommand(event.data);
         });
 
-        // Event listener to reset size to 1 when an option is clicked
+        // Event listener to change ticker
         document.getElementById('tickerSelect').addEventListener('click', function() {
           spec.transform[0].filter = "datum.ticker === '" + tickers[activeTicker] + "'";
 
@@ -238,156 +239,19 @@ fetch('charts/stock-vega-lite.json')
           vegaEmbed('#barChart', spec).then(({spec, view}) => {
             chartView = view;
           }).catch(console.error);
+        });
         
 
+        // Event listener to add reference lines
+        const items = document.querySelectorAll('.item');
+        items.forEach(item => {
+          item.addEventListener('click', event => {
+            item.classList.toggle('checked');
+            // change spec and rerender
+          });
         });
         
     }).catch(console.error); 
 });
 
-// fetch('charts/stock_prices.json')
-// .then(response => response.json())
-// .then(spec => {
-//     vegaEmbed('#barChart', spec).then(({ spec, view }) => {
-
-//         function OSCtoCommand(oscMsg) {    
-//             var data = JSON.parse(oscMsg);
-//             console.log(data);
-        
-//             if (data.address == "/searchButton") {
-//                 search();
-//             }
-//         }
-
-//         // Listen for messages from the server
-//         socket.addEventListener('message', function (event) {
-//             OSCtoCommand(event.data);
-//         });
-
-//     }).catch(console.error); 
-// });
-
-
-// fetch('charts/bar.json')
-// .then(response => response.json())
-// .then(spec => {
-//     vegaEmbed('#barChart', spec).then(({ spec, view }) => {
-//       var isHovering = false; 
-  
-//       view.addEventListener('mouseover', () => {isHovering = true;});
-//       view.addEventListener('mouseout', () => {isHovering = false;});
-  
-//       function select(newIndex) {
-//           view.signal("selectIndex", newIndex).run()
-//       }
-  
-//       function tooltip(show) {
-//           view.signal("tooltip", show == 1).run();
-//       }
-  
-//       function zoom(newZoom) {
-//           view.signal("zoom", newZoom).run();
-//       }
-  
-//       function OSCtoCommand(oscMsg) {
-//           if (!isHovering) {
-//               return;
-//           }
-  
-//           var data = JSON.parse(oscMsg);
-//           console.log(data);
-      
-//           if (data.address == "/fader1") {
-//               if (mode == 0) {
-//                   select(data.args);
-//               }
-//               else if (mode == 1){
-//                   zoom(data.args);
-//               }
-//           }
-      
-//           if (data.address == "/button1") {
-//               if (mode == 0) {
-//                   tooltip(data.args);
-//               }
-//               else if (mode == 1) {
-//                   zoom(0.5);
-//               }
-//               else {
-//                   console.log("Command not found")
-//               }
-//           }
-//       }
-  
-//       // Listen for messages from the server
-//       socket.addEventListener('message', function (event) {
-//           OSCtoCommand(event.data);
-//       });
-  
-//   }).catch(console.error); 
-// });
-
-
-// fetch('charts/scatter.json')
-// .then(response => response.json())
-// .then(spec => {
-//     vegaEmbed('#scatterPlot', spec).then(({ spec, view }) => {
-//       var isHovering = false; 
-  
-//       view.addEventListener('mouseover', () => {isHovering = true;});
-//       view.addEventListener('mouseout', () => {isHovering = false;});
-
-//       function zoom(newZoom) {
-//         view.signal("zoom", parseFloat(newZoom) + 0.5).run();
-//         console.log("zooming with " + parseFloat(newZoom) + 0.5);
-//       }
-
-//       function OSCtoCommand(oscMsg) {
-//         if (!isHovering) {
-//             return;
-//         }
-
-//         var data = JSON.parse(oscMsg);
-//         console.log(data);
-    
-//         if (data.address == "/fader1") {
-//             if (mode == 0) {
-//                 select(data.args);
-//             }
-//             else if (mode == 1){
-//                 zoom(data.args);
-//             }
-//         }
-    
-//         if (data.address == "/button1") {
-//             if (mode == 0) {
-//                 tooltip(data.args);
-//             }
-//             else if (mode == 1) {
-//                 zoom(0.5);
-//             }
-//             else {
-//                 console.log("Command not found")
-//             }
-//         }
-//       }
-
-//       // Listen for messages from the server
-//       socket.addEventListener('message', function (event) {
-//           OSCtoCommand(event.data);
-//       });
-
-//     }).catch(console.error);
-// });
-
-// fetch('charts/cross-original.json')
-// .then(response => response.json())
-// .then(spec => {
-//     vegaEmbed('#crossBarChart', spec)
-//         .catch(console.error);
-// });
-
-
-
-  
 

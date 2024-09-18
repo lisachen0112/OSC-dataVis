@@ -7,17 +7,10 @@
     <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>    
     <script type="text/javascript" src="./interaction.js" defer></script>
     <link rel="stylesheet" type="text/css" href="stylesheets/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   </head>
   <body>
     <h1>OSC data visualisation</h1>
-    <!-- <label for="ticker">Choose a ticker:</label>
-    <select name="ticker" id="tickerSelect">
-      <option value="AMZN">AMZN</option>
-      <option value="NFLX">NFLX</option>
-      <option value="AAPL">AAPL</option>
-      <option value="TSLA">TSLA</option>
-    </select> -->
-
     <div class="select-box" id="tickerSelect">
       <div>Select ticker</div>
       <div class="options-container" id="options-container">
@@ -44,9 +37,27 @@
       </div>
     </div>
     <br>
-    <div id="barChart"></div>
-    <!-- <div id="scatterPlot"></div>
-    <div id="crossBarChart"></div> -->
+    <div id="display">
+      <div id="barChart"></div>
+      <div id="addOns">
+        <ul class="list-items">
+          <li class="item" tabindex="0">
+            <span class="checkbox">
+              <i class="fa-solid fa-check check-icon"></i>
+            </span>
+            <span class="item-text">Moving average 7 days</span>
+          </li>
+
+          <li class="item" tabindex="0">
+            <span class="checkbox">
+              <i class="fa-solid fa-check check-icon"></i>
+            </span>
+            <span class="item-text">Moving average 30 days</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+    
   </body> 
   <script>
 
