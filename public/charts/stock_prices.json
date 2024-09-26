@@ -1,104 +1,232 @@
 {
-    "$schema": "https://vega.github.io/schema/vega/v5.json",
-    "width": 650,
-    "height": 300,
-    "padding": 5,
-    "signals": [
-        { "name": "select", "value": "TSLA" },
+  "$schema": "https://vega.github.io/schema/vega/v5.json",
+  "width": 720,
+  "height": 480,
+  "padding": 5,
+  "data": [
+    {
+      "name": "stocks",
+      "url": "data/historical_stock_prices.json",
+      "format": {"type": "json"},
+      "transform": [
+        {"type": "filter", "expr": "datum.ticker === 'AMZN'"},
         {
-            "name": "minClose",
-            "update": "data('stock_stats')[0].minClose"
-          },
-          {
-            "name": "maxClose",
-            "update": "data('stock_stats')[0].maxClose"
-          },
-          {
-            "name": "adjustedMaxClose",
-            "update": "maxClose + (maxClose - minClose) * 0.2"
-          }
-    ],
-    "data": [
-        {
-            "name": "stock", 
-            "url": "data/historical_stock_prices.json",
-            "transform": [
-                {
-                    "type": "formula",
-                    "expr": "toDate(datum.date)",  
-                    "as": "date"
-                },
-                {
-                    "type": "filter",
-                    "expr": "datum.ticker === select"
-                }
-            ]
-        },
-        {
-          "name": "stock_stats",
-          "source": "stock",
-          "transform": [
-            {
-              "type": "aggregate",
-              "fields": ["close", "close"],
-              "ops": ["min", "max"],
-              "as": ["minClose", "maxClose"]
-            }
-          ]
+          "type": "formula",
+          "expr": "toDate(datum.date)",
+          "as": "datetime"
         }
-    ], 
-
-    "scales": [
+      ]
+    }
+  ],
+  "signals": [
+    {
+      "name": "detailDomain"
+    }
+  ],
+  "marks": [
+    {
+      "type": "group",
+      "name": "detail",
+      "encode": {
+        "enter": {
+          "width": {"value": 720},  
+          "height": {"value": 390}
+        }
+      },
+      "scales": [
         {
-          "name": "x",
+          "name": "xDetail",
           "type": "time",
+          "domain": {"data": "stocks", "field": "datetime"},
           "range": "width",
-          "domain": {"data": "stock", "field": "date"}
+          "domainRaw" : {"signal": "detailDomain"}
         },
         {
-          "name": "y",
+          "name": "yDetail",
           "type": "linear",
-          "range": "height",
+          "domain": {"data": "stocks", "field": "close"},
+          "range": [390, 0],
           "nice": true,
-          "zero": true,
-          "domain": {"signal": "[0, adjustedMaxClose]"}
-        },
-        {
-          "name": "color",
-          "type": "ordinal",
-          "range": "category",
-          "domain": {"data": "stock", "field": "ticker"}
+          "zero": true
         }
       ],
       "axes": [
-        {"orient": "bottom", "scale": "x"},
-        {"orient": "left", "scale": "y"}
+        {
+          "orient": "bottom",
+          "scale": "xDetail",
+          "format": "%d/%m",
+          "labelAngle": 45
+        },
+        {
+          "orient": "left",
+          "scale": "yDetail"
+        }
       ],
-    
       "marks": [
         {
           "type": "group",
-          "from": {
-            "facet": {
-              "name": "series",
-              "data": "stock",
-              "groupby": "ticker"
+          "encode": {
+            "enter": {
+              "height": {"field": {"group": "height"}},
+              "width": {"field": {"group": "width"}},
+              "clip": {"value": true}
             }
           },
           "marks": [
             {
               "type": "line",
-              "from": {"data": "series"},
+              "from": {"data": "stocks"},
               "encode": {
-                "enter": {
-                  "x": {"scale": "x", "field": "date"},
-                  "y": {"scale": "y", "field": "close"},
-                  "stroke": {"scale": "color", "field": "ticker"},
-                  "strokeWidth": {"value": 2}
+                "update": {
+                  "x": {"scale": "xDetail", "field": "datetime"},
+                  "y": {"scale": "yDetail", "field": "close"},
+                  "y2": {"scale": "yDetail", "value": 0}
                 }
               }
             }
-          ]
+        ]
+      }
+    ]
+  },
+
+  {
+    "type": "group",
+    "name": "overview",
+    "encode": {
+      "enter": {
+        "x": {"value": 0},
+        "y": {"value": 430},
+        "height": {"value": 70},
+        "width": {"value": 720},
+        "fill": {"value": "transparent"}
+      }
+    },
+    "signals": [
+      {
+        "name": "brush", "value": 0,
+        "on": [
+          {
+            "events": "@overview:pointerdown",
+            "update": "[x(), x()]"
+          },
+          {
+            "events": "[@overview:pointerdown, window:pointerup] > window:pointermove!",
+            "update": "[brush[0], clamp(x(), 0, width)]"
+          },
+          {
+            "events": {"signal": "delta"},
+            "update": "clampRange([anchor[0] + delta, anchor[1] + delta], 0, width)"
+          }
+        ]
+      },
+      {
+        "name": "anchor", "value": null,
+        "on": [{"events": "@brush:pointerdown", "update": "slice(brush)"}]
+      },
+      {
+        "name": "xdown", "value": 0,
+        "on": [{"events": "@brush:pointerdown", "update": "x()"}]
+      },
+      {
+        "name": "delta", "value": 0,
+        "on": [
+          {
+            "events": "[@brush:pointerdown, window:pointerup] > window:pointermove!",
+            "update": "x() - xdown"
+          }
+        ]
+      },
+      {
+        "name": "detailDomain",
+        "push": "outer",
+        "on": [
+          {
+            "events": {"signal": "brush"},
+            "update": "span(brush) ? invert('xOverview', brush) : null"
+          }
+        ]
+      }
+    ],
+    "scales": [
+      {
+        "name": "xOverview",
+        "type": "time",
+        "range": "width",
+        "domain": {"data": "stocks", "field": "datetime"}
+      },
+      {
+        "name": "yOverview",
+        "type": "linear",
+        "range": [70, 0],
+        "domain": {"data": "stocks", "field": "close"},
+        "nice": true, 
+        "zero": true
+      }
+    ],
+    "axes": [
+      {"orient": "bottom", "scale": "xOverview"}
+    ],
+    "marks": [
+      {
+        "type": "area",
+        "interactive": false,
+        "from": {"data": "stocks"},
+        "encode": {
+          "update": {
+            "x": {"scale": "xOverview", "field": "datetime"},
+            "y": {"scale": "yOverview", "field": "close"},
+            "y2": {"scale": "yOverview", "value": 0},
+            "fill": {"value": "steelblue"}
+          }
         }
-      ]
+      },
+      {
+        "type": "rect",
+        "name": "brush",
+        "encode": {
+          "enter": {
+            "y": {"value": 0},
+            "height": {"value": 70},
+            "fill": {"value": "#333"},
+            "fillOpacity": {"value": 0.2}
+          },
+          "update": {
+            "x": {"signal": "brush[0]"},
+            "x2": {"signal": "brush[1]"}
+          }
+        }
+      },
+      {
+        "type": "rect",
+        "interactive": false,
+        "encode": {
+          "enter": {
+            "y": {"value": 0},
+            "height": {"value": 70},
+            "width": {"value": 1},
+            "fill": {"value": "firebrick"}
+          },
+          "update": {
+            "x": {"signal": "brush[0]"}
+          }
+        }
+      },
+      {
+        "type": "rect",
+        "interactive": false,
+        "encode": {
+          "enter": {
+            "y": {"value": 0},
+            "height": {"value": 70},
+            "width": {"value": 1},
+            "fill": {"value": "firebrick"}
+          },
+          "update": {
+            "x": {"signal": "brush[1]"}
+          }
+        }
+      }
+    ]
+  }
+  ]
 }

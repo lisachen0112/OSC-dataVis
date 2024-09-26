@@ -201,119 +201,131 @@ function selectChart(val) {
 
 
 
-fetch('charts/stock-vega-lite.json')
-.then(response => response.json())
-.then(spec => {
-    vegaEmbed('#barChart', spec).then(({spec, view}) => {
+// fetch('charts/stock-vega-lite.json')
+// .then(response => response.json())
+// .then(spec => {
+//     vegaEmbed('#barChart', spec).then(({spec, view}) => {
 
-        function OSCtoCommand(oscMsg) {
+//         function OSCtoCommand(oscMsg) {
     
-            var data = JSON.parse(oscMsg);
-            // console.log(data);
+//             var data = JSON.parse(oscMsg);
+//             // console.log(data);
         
-            if (data.address == "/minRadial") {
-                minBound(data.args);
-            }
-            else if (data.address == "/radio1") {
-              spec.vconcat[0].layer[0].layer = selectChart(data.args);
-              // Render the updated spec
-              vegaEmbed('#barChart', spec).then(({spec, view}) => {
-                chartView = view;
-              }).catch(console.error);
-            }
-        }
+//             if (data.address == "/minRadial") {
+//                 minBound(data.args);
+//             }
+//             else if (data.address == "/radio1") {
+//               spec.vconcat[0].layer[0].layer = selectChart(data.args);
+//               // Render the updated spec
+//               vegaEmbed('#barChart', spec).then(({spec, view}) => {
+//                 chartView = view;
+//               }).catch(console.error);
+//             }
+//         }
 
-        // Listen for changes to the 'brush' signal
-        view.addSignalListener('brush', (name, value) => {
-          console.log('Brush signal changed:', value);
-        });
+//         // Listen for changes to the 'brush' signal
+//         view.addSignalListener('brush', (name, value) => {
+//           console.log('Brush signal changed:', value);
+//         });
       
 
-        // Listen for messages from the server
-        socket.addEventListener('message', function (event) {
-            OSCtoCommand(event.data);
-        });
+//         // Listen for messages from the server
+//         socket.addEventListener('message', function (event) {
+//             OSCtoCommand(event.data);
+//         });
 
-        // Event listener to change ticker
-        document.getElementById('tickerSelect').addEventListener('click', function() {
-          spec.transform[0].filter = "datum.ticker === '" + tickers[activeTicker] + "'";
+//         // Event listener to change ticker
+//         document.getElementById('tickerSelect').addEventListener('click', function() {
+//           spec.transform[0].filter = "datum.ticker === '" + tickers[activeTicker] + "'";
 
-          // Render the updated spec
-          vegaEmbed('#barChart', spec).then(({spec, view}) => {
-            chartView = view;
-          }).catch(console.error);
-        });
+//           // Render the updated spec
+//           vegaEmbed('#barChart', spec).then(({spec, view}) => {
+//             chartView = view;
+//           }).catch(console.error);
+//         });
         
-        // Event listener to add reference lines
-        const items = document.querySelectorAll('.item');
-        items.forEach(item => {
-          item.addEventListener('keypress', event => {
-            if (event.key === 'Enter') {
-              item.classList.toggle('checked');
-              // change spec and rerender
-              if (item.classList.contains('checked')) {
-                if (item.id == '7days') {
-                  spec.vconcat[0].layer.push({
-                    "mark": "line",
-                    "encoding": {
-                      "y": {"field": "MVGA7", "type": "quantitative"},
-                      "color": {"value": "red"},
-                      "opacity": {"value": 0.5}
-                    }
-                  })
-                }
+//         // Event listener to add reference lines
+//         const items = document.querySelectorAll('.item');
+//         items.forEach(item => {
+//           item.addEventListener('keypress', event => {
+//             if (event.key === 'Enter') {
+//               item.classList.toggle('checked');
+//               // change spec and rerender
+//               if (item.classList.contains('checked')) {
+//                 if (item.id == '7days') {
+//                   spec.vconcat[0].layer.push({
+//                     "mark": "line",
+//                     "encoding": {
+//                       "y": {"field": "MVGA7", "type": "quantitative"},
+//                       "color": {"value": "red"},
+//                       "opacity": {"value": 0.5}
+//                     }
+//                   })
+//                 }
 
-                if (item.id == '30days') {
-                  spec.vconcat[0].layer.push({
-                    "mark": "line",
-                    "encoding": {
-                      "y": {"field": "MVGA30", "type": "quantitative"},
-                      "color": {"value": "orange"},
-                      "opacity": {"value": 0.5}
-                    }
-                  })
-                }
+//                 if (item.id == '30days') {
+//                   spec.vconcat[0].layer.push({
+//                     "mark": "line",
+//                     "encoding": {
+//                       "y": {"field": "MVGA30", "type": "quantitative"},
+//                       "color": {"value": "orange"},
+//                       "opacity": {"value": 0.5}
+//                     }
+//                   })
+//                 }
 
-                // Render the updated spec
-                vegaEmbed('#barChart', spec).then(({spec, view}) => {
-                  chartView = view;
-                }).catch(console.error);
-              }
-              else {
-                if (item.id == '7days') {
-                  var i = 1;
-                  while (i < spec.vconcat[0].layer.length) {
-                    if (spec.vconcat[0].layer[i].encoding.y.field == 'MVGA7') {
-                      spec.vconcat[0].layer.splice(i, 1);
-                    }
-                    i++;
-                  }
-                }
+//                 // Render the updated spec
+//                 vegaEmbed('#barChart', spec).then(({spec, view}) => {
+//                   chartView = view;
+//                 }).catch(console.error);
+//               }
+//               else {
+//                 if (item.id == '7days') {
+//                   var i = 1;
+//                   while (i < spec.vconcat[0].layer.length) {
+//                     if (spec.vconcat[0].layer[i].encoding.y.field == 'MVGA7') {
+//                       spec.vconcat[0].layer.splice(i, 1);
+//                     }
+//                     i++;
+//                   }
+//                 }
 
-                if (item.id == '30days') {
-                  var i = 1;
-                  while (i < spec.vconcat[0].layer.length) {
-                    if (spec.vconcat[0].layer[i].encoding.y.field == 'MVGA30') {
-                      spec.vconcat[0].layer.splice(i, 1);
-                    }
-                    i++;
-                  }
+//                 if (item.id == '30days') {
+//                   var i = 1;
+//                   while (i < spec.vconcat[0].layer.length) {
+//                     if (spec.vconcat[0].layer[i].encoding.y.field == 'MVGA30') {
+//                       spec.vconcat[0].layer.splice(i, 1);
+//                     }
+//                     i++;
+//                   }
                   
-                }
+//                 }
 
-                // Render the updated spec
-                vegaEmbed('#barChart', spec).then(({spec, view}) => {
-                  chartView = view;
-                }).catch(console.error);
+//                 // Render the updated spec
+//                 vegaEmbed('#barChart', spec).then(({spec, view}) => {
+//                   chartView = view;
+//                 }).catch(console.error);
 
-              }
+//               }
  
               
-            }
-          });
-        });
+//             }
+//           });
+//         });
         
-    }).catch(console.error); 
+//     }).catch(console.error); 
+// });
+
+// fetch('charts/stock_prices.json')
+// .then(response => response.json())
+// .then(spec => {
+//     vegaEmbed('#barChart', spec).then(({ spec, view }) => {
+//     }).catch(console.error);
+// });
+
+fetch('charts/pie-chart.json')
+.then(response => response.json())
+.then(spec => {
+    vegaEmbed('#barChart', spec).then(({ spec, view }) => {
+    }).catch(console.error);
 });
-
-
