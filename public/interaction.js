@@ -7,6 +7,7 @@ var prevStepValue  = 0;
 var prevStepValueAddOn = 0;
 var addOnActive = 0;
 var page = 0;
+var pieChartFrequency = '1day';
 
 socket.addEventListener('open', function (event) {
   console.log('Client connects to WS server');
@@ -354,7 +355,7 @@ function renderPage() {
           // Render the updated spec
           vegaEmbed('#barChart', spec).then(({spec, view}) => {
             chartView = view;
-        }).catch(console.error);
+          }).catch(console.error);
       }
       });
     }).catch(console.error);
@@ -365,6 +366,38 @@ function renderPage() {
     .then(response => response.json())
     .then(spec => {
         vegaEmbed('#barChart', spec).then(({ spec, view }) => {
+          
+          function OSCtoCommand(oscMsg) {
+
+            var data = JSON.parse(oscMsg);
+        
+            if (data.address == "/3/pieFreq") {
+                if (data.args == 0) {
+                  pieChartFrequency = '1day';
+                }
+                else if (data.args == 1) {
+                  pieChartFrequency = 'MTD';
+                }
+                else if (data.args == 2) {
+                  pieChartFrequency = 'QTD';
+                }
+                else {
+                  pieChartFrequency = 'YTD';
+                }
+
+                spec.data[0].transform[0].expr = "datum.period === '" + pieChartFrequency + "'";
+                // Render the updated spec
+                vegaEmbed('#barChart', spec).then(({spec, view}) => {
+                  chartView = view;
+                }).catch(console.error);
+            }
+
+          }
+
+          socket.addEventListener('message', function (event) {
+              OSCtoCommand(event.data);
+          });
+
         }).catch(console.error);
     });
   }

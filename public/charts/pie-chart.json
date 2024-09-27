@@ -22,7 +22,12 @@
         "name": "cornerRadius", "value": 0
       }
     ],
-  
+    "title": {
+      "text": "SP500 Sector Performance",
+      "anchor": "middle",
+      "frame": "group",
+      "offset": 4
+    },
     "data": [
       {
         "name": "sp500",
@@ -37,7 +42,7 @@
             },
             {
                 "type": "pie",
-                "field": "percentage_change",
+                "field": "weight",
                 "startAngle": 0,
                 "endAngle": 6.29
             }
@@ -49,8 +54,8 @@
       {
         "name": "color",
         "type": "ordinal",
-        "domain": {"data": "sp500", "field": "sector"},
-        "range": {"scheme": "category20"}
+        "domain": {"data": "sp500", "field": "percentage_change"},
+        "range": ["green", "red"]
       }
     ],
   
@@ -60,12 +65,13 @@
         "from": {"data": "sp500"},
         "encode": {
           "enter": {
-            "fill": {"scale": "color", "field": "sector"},
             "x": {"signal": "width / 2"},
             "y": {"signal": "height / 2"},
             "tooltip": {
-                "signal": "{'Sector': datum.sector, 'Percentage Change (%)': datum.percentage_change}"
-              }
+              "signal": "{'Sector': datum.sector, 'Percentage Change': format(datum.percentage_change, '.2%'), 'Weight': format(datum.weight, '.2%')}"
+            },
+            "stroke": {"value": "white"},
+            "strokeWidth": {"value": 1}
           },
           "update": {
             "startAngle": {"field": "startAngle"},
@@ -73,7 +79,33 @@
             "padAngle": {"signal": "padAngle"},
             "innerRadius": {"signal": "innerRadius"},
             "outerRadius": {"signal": "width / 2"},
-            "cornerRadius": {"signal": "cornerRadius"}
+            "cornerRadius": {"signal": "cornerRadius"},
+            "fill": [
+              {
+                "test": "datum.percentage_change > 0",  
+                "value": "green"
+              },
+              {
+                "test": "datum.percentage_change <= 0",
+                "value": "red"
+              }
+            ]
+          }
+        }
+      }, 
+      {
+        "type": "text",
+        "from": {"data": "sp500"},
+        "encode": {
+          "enter": {
+            "x": {"signal": "width / 2"},
+            "y": {"signal": "height / 2"},
+            "radius": {"signal": "min(width, height) / 4 + 45"},  
+            "theta": {"signal": "(datum.startAngle + datum.endAngle) / 2"},
+            "fill": {"value": "white"},  
+            "align": {"value": "center"},
+            "baseline": {"value": "middle"},
+            "text": {"signal": "format(datum.percentage_change, '.2%')"}  
           }
         }
       }
