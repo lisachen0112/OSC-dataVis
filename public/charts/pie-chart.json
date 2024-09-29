@@ -94,6 +94,15 @@
                 "test": "datum.percentage_change <= 0",
                 "value": "red"
               }
+            ],
+            "opacity": [
+              {
+                "test": "parseInt(datum.id) === selectIndex",
+                "value": 1
+              },
+              {
+                "value": 0.6
+              }
             ]
           }
         }
