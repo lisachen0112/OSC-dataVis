@@ -1,45 +1,45 @@
-﻿sector,percentage_change,period,weight
-Energy,-0.019,1day,0.042
-Materials,-0.006,1day,0.055
-Industrials,-0.0046,1day,0.158
-Consumer Discretionary,-0.0038,1day,0.1
-Consumer Staples,-0.0003,1day,0.074
-Health Care,-0.0094,1day,0.125
-Financials,-0.006,1day,0.151
-Information Technology,0.005,1day,0.127
-Communication Services,-0.0004,1day,0.038
-Utilities,0.0054,1day,0.063
-Real Estate,-0.004,1day,0.066
-Energy,-0.0366,MTD,0.042
-Materials,0.0127,MTD,0.055
-Industrials,0.0211,MTD,0.158
-Consumer Discretionary,0.0725,MTD,0.1
-Consumer Staples,0.0056,MTD,0.074
-Health Care,-0.0269,MTD,0.125
-Financials,-0.0185,MTD,0.151
-Information Technology,0.0194,MTD,0.127
-Communication Services,0.0288,MTD,0.038
-Utilities,0.0568,MTD,0.063
-Real Estate,0.0288,MTD,0.066
-Energy,-0.0398,QTD,0.042
-Materials,0.0798,QTD,0.055
-Industrials,0.0991,QTD,0.158
-Consumer Discretionary,0.0783,QTD,0.1
-Consumer Staples,0.0825,QTD,0.074
-Health Care,0.0472,QTD,0.125
-Financials,0.089,QTD,0.151
-Information Technology,0.0094,QTD,0.127
-Communication Services,-0.0018,QTD,0.038
-Utilities,0.1763,QTD,0.063
-Real Estate,0.1641,QTD,0.066
-Energy,0.0474,YTD,0.042
-Materials,0.1136,YTD,0.055
-Industrials,0.1757,YTD,0.158
-Consumer Discretionary,0.1346,YTD,0.1
-Consumer Staples,0.1642,YTD,0.074
-Health Care,0.1196,YTD,0.125
-Financials,0.1896,YTD,0.151
-Information Technology,0.2899,YTD,0.127
-Communication Services,0.2586,YTD,0.038
-Utilities,0.2655,YTD,0.063
-Real Estate,0.1159,YTD,0.066
+﻿sector,percentage_change,period,weight,id
+Energy,-0.019,1day,0.042,0
+Materials,-0.006,1day,0.055,1
+Industrials,-0.0046,1day,0.158,2
+Consumer Discretionary,-0.0038,1day,0.1,3
+Consumer Staples,-0.0003,1day,0.074,4
+Health Care,-0.0094,1day,0.125,5
+Financials,-0.006,1day,0.151,6
+Information Technology,0.005,1day,0.127,7
+Communication Services,-0.0004,1day,0.038,8
+Utilities,0.0054,1day,0.063,9
+Real Estate,-0.004,1day,0.066,10
+Energy,-0.0366,MTD,0.042,0
+Materials,0.0127,MTD,0.055,1
+Industrials,0.0211,MTD,0.158,2
+Consumer Discretionary,0.0725,MTD,0.1,3
+Consumer Staples,0.0056,MTD,0.074,4
+Health Care,-0.0269,MTD,0.125,5
+Financials,-0.0185,MTD,0.151,6
+Information Technology,0.0194,MTD,0.127,7
+Communication Services,0.0288,MTD,0.038,8
+Utilities,0.0568,MTD,0.063,9
+Real Estate,0.0288,MTD,0.066,10
+Energy,-0.0398,QTD,0.042,0
+Materials,0.0798,QTD,0.055,1
+Industrials,0.0991,QTD,0.158,2
+Consumer Discretionary,0.0783,QTD,0.1,3
+Consumer Staples,0.0825,QTD,0.074,4
+Health Care,0.0472,QTD,0.125,5
+Financials,0.089,QTD,0.151,6
+Information Technology,0.0094,QTD,0.127,7
+Communication Services,-0.0018,QTD,0.038,8
+Utilities,0.1763,QTD,0.063,9
+Real Estate,0.1641,QTD,0.066,10
+Energy,0.0474,YTD,0.042,0
+Materials,0.1136,YTD,0.055,1
+Industrials,0.1757,YTD,0.158,2
+Consumer Discretionary,0.1346,YTD,0.1,3
+Consumer Staples,0.1642,YTD,0.074,4
+Health Care,0.1196,YTD,0.125,5
+Financials,0.1896,YTD,0.151,6
+Information Technology,0.2899,YTD,0.127,7
+Communication Services,0.2586,YTD,0.038,8
+Utilities,0.2655,YTD,0.063,9
+Real Estate,0.1159,YTD,0.066,10

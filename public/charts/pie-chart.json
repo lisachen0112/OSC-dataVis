@@ -20,8 +20,16 @@
       },
       {
         "name": "cornerRadius", "value": 0
-      }
-    ],
+      },
+      {
+        "name": "selectIndex",
+        "value": 0
+      },
+      {
+        "name": "tooltip",
+        "value": true, 
+        "update": "tooltip"
+      }],
     "title": {
       "text": "SP500 Sector Performance",
       "anchor": "middle",
@@ -55,7 +63,7 @@
         "name": "color",
         "type": "ordinal",
         "domain": {"data": "sp500", "field": "percentage_change"},
-        "range": ["green", "red"]
+        "range": ["green", "red", "yellow"]
       }
     ],
   
@@ -67,9 +75,6 @@
           "enter": {
             "x": {"signal": "width / 2"},
             "y": {"signal": "height / 2"},
-            "tooltip": {
-              "signal": "{'Sector': datum.sector, 'Percentage Change': format(datum.percentage_change, '.2%'), 'Weight': format(datum.weight, '.2%')}"
-            },
             "stroke": {"value": "white"},
             "strokeWidth": {"value": 1}
           },
