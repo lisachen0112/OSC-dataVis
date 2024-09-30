@@ -279,6 +279,7 @@ function pieChartInfo() {
 
 function renderPage() {
   if (page == 0) {
+    document.getElementById('pieChartInfo').innerHTML = '';
     fetch('charts/stock-vega-lite.json')
     .then(response => response.json())
     .then(spec => {
@@ -392,6 +393,7 @@ function renderPage() {
     });
   }
   else if (page == 1) {
+    document.getElementById('pieChartInfo').innerHTML = '';
   fetch('charts/stock_prices.json')
   .then(response => response.json())
   .then(spec => {
