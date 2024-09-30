@@ -261,6 +261,21 @@ function pieScroll(val) {
   prevStepValuePie = currentStep;
 }
 
+function pieChartInfo() {
+  d3.csv('data/sp500sector.csv').then(function(data) {
+    var data = data.filter(function(d) {
+      return d.period == pieChartFrequency;
+    });
+
+    var info = document.getElementById('pieChartInfo');
+    info.innerHTML = 'Pie Chart Frequency: ' + pieChartFrequency + '<br>' + 
+    'Sector: ' + data[indexPie].sector + '<br>' + 
+    'Percentage Change: ' + (parseFloat(data[indexPie].percentage_change) * 100).toFixed(2) + '%<br>' +
+    'Weight: ' + (parseFloat(data[indexPie].weight) * 100).toFixed(2) + '%'
+  });
+
+}
+
 
 function renderPage() {
   if (page == 0) {
@@ -401,7 +416,7 @@ function renderPage() {
     .then(response => response.json())
     .then(spec => {
         vegaEmbed('#barChart', spec).then(({ spec, view }) => {
-          
+          pieChartInfo();
           function OSCtoCommand(oscMsg) {
 
             var data = JSON.parse(oscMsg);
@@ -419,17 +434,15 @@ function renderPage() {
                 else {
                   pieChartFrequency = 'YTD';
                 }
-
-                spec.data[0].transform[0].expr = "datum.period === '" + pieChartFrequency + "'";
-                // Render the updated spec
-                vegaEmbed('#barChart', spec).then(({spec, view}) => {
-                  chartView = view;
-                }).catch(console.error);
+                view.signal("frequency", pieChartFrequency).run();
+                pieChartInfo();
+                
             }
             else if (data.address == "/3/pieSelect") {
               pieScroll(data.args);
         
-              view.signal("selectIndex", indexPie).run()
+              view.signal("selectIndex", indexPie).run();
+              pieChartInfo();
             }
 
           }

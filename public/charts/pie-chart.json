@@ -26,10 +26,10 @@
         "value": 0
       },
       {
-        "name": "tooltip",
-        "value": true, 
-        "update": "tooltip"
-      }],
+        "name": "frequency",
+        "value": "1day"
+      }
+    ],
     "title": {
       "text": "SP500 Sector Performance",
       "anchor": "middle",
@@ -46,7 +46,7 @@
         "transform": [
             {
                 "type": "filter",
-                "expr": "datum.period === '1day'"
+                "expr": "datum.period === frequency"
             },
             {
                 "type": "pie",
