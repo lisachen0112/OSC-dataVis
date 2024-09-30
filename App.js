@@ -84,6 +84,7 @@ wss.on('connection', function connection(ws) {
 
     ws.on('message', function incoming(message) {
         console.log('received: %s', message);
+        oscModule.send(JSON.parse(message),"192.168.0.81", 20);
     });
     
 });

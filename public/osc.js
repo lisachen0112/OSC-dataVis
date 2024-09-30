@@ -10,6 +10,15 @@ udpPort.open();
 
 udpPort.on("ready", function() {
     console.log("OSC UDP Port is ready!");
+    udpPort.send({
+        address: "/2/fader3",
+        args: [
+            {
+                type: "s",
+                value: "Hello, World!"
+            }
+        ]
+    }, "192.168.0.81", 20);
 });
 
 udpPort.on("error", function(error) {

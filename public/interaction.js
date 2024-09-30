@@ -57,26 +57,23 @@ socket.addEventListener('message', function (event) {
         search();
       }
 
-      if (data.address == "/searchButton" && data.args == 0 && mode == 1) {
+      else if (data.address == "/searchButton" && data.args == 0 && mode == 1) {
         closeSearch();
       }
-    }
 
-    if (page == 0 || page == 1) {
-      if (data.address == "/searchButton" && data.args == 1 && mode == 0) {
+      else if (data.address == "/searchButton" && data.args == 1 && mode == 0) {
         search();
       }
-
-      if (data.address == "/searchButton" && data.args == 0 && mode == 0) {
+  
+      else if (data.address == "/searchButton" && data.args == 0 && mode == 0) {
         closeSearch();
       }
-
-      if (data.address == "/scroll") {
+  
+      else if (data.address == "/scroll") {
         scroll(data.args);
       }
     }
 });
-
 
 
 function scroll(val) {
@@ -398,7 +395,9 @@ function renderPage() {
   .then(spec => {
     
     vegaEmbed('#barChart', spec).then(({ spec, view }) => {
-
+      
+      var faderPrevStep = 0;
+      
       function OSCtoCommand(oscMsg) {
 
         var data = JSON.parse(oscMsg);
@@ -406,12 +405,29 @@ function renderPage() {
         if (data.address == "/2/radial1") {
           let brush = view.signal("brush");
           view.signal("brush", [Math.min(brush[1], data.args * 720), brush[1]]).run();
+          var faderValue = (brush[0] + ((brush[1] - brush[0]) / 2)) / 720
+          var oscMessage = {
+            address: "/2/fader3",
+            args: [{ type: 'f', value: faderValue}]
+          }
           console.log(view.signal("brush"));
+          console.log(faderValue);
+
+          socket.send(JSON.stringify(oscMessage)); // move fader
         }
         else if (data.address == "/2/radial2") {
           let brush = view.signal("brush");
           view.signal("brush", [brush[0], Math.max(brush[0], data.args * 720)]).run();
+          var faderValue = (brush[0] + ((brush[1] - brush[0]) / 2)) / 720
+          var oscMessage = {
+            address: "/2/fader3",
+            args: [{ type: 'f', value: faderValue}]
+          }
           console.log(view.signal("brush"));
+          console.log(faderValue);
+
+
+          socket.send(JSON.stringify(oscMessage)); // move fader
         }
       }
 
@@ -460,7 +476,6 @@ function renderPage() {
               view.signal("selectIndex", indexPie).run();
               pieChartInfo();
             }
-
           }
 
           socket.addEventListener('message', function (event) {
