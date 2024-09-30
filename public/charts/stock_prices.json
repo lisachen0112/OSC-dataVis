@@ -3,24 +3,32 @@
   "width": 720,
   "height": 480,
   "padding": 5,
+  "signals": [
+    {
+      "name": "detailDomain"
+    },
+    {
+      "name": "ticker",
+      "value": "AMZN"
+    },
+    {
+      "name": "brush", 
+      "value": [0, 720]
+    }
+  ],
   "data": [
     {
       "name": "stocks",
       "url": "data/historical_stock_prices.json",
       "format": {"type": "json"},
       "transform": [
-        {"type": "filter", "expr": "datum.ticker === 'AMZN'"},
+        {"type": "filter", "expr": "datum.ticker === ticker"},
         {
           "type": "formula",
           "expr": "toDate(datum.date)",
           "as": "datetime"
         }
       ]
-    }
-  ],
-  "signals": [
-    {
-      "name": "detailDomain"
     }
   ],
   "marks": [
@@ -103,40 +111,6 @@
     },
     "signals": [
       {
-        "name": "brush", "value": 0,
-        "on": [
-          {
-            "events": "@overview:pointerdown",
-            "update": "[x(), x()]"
-          },
-          {
-            "events": "[@overview:pointerdown, window:pointerup] > window:pointermove!",
-            "update": "[brush[0], clamp(x(), 0, width)]"
-          },
-          {
-            "events": {"signal": "delta"},
-            "update": "clampRange([anchor[0] + delta, anchor[1] + delta], 0, width)"
-          }
-        ]
-      },
-      {
-        "name": "anchor", "value": null,
-        "on": [{"events": "@brush:pointerdown", "update": "slice(brush)"}]
-      },
-      {
-        "name": "xdown", "value": 0,
-        "on": [{"events": "@brush:pointerdown", "update": "x()"}]
-      },
-      {
-        "name": "delta", "value": 0,
-        "on": [
-          {
-            "events": "[@brush:pointerdown, window:pointerup] > window:pointermove!",
-            "update": "x() - xdown"
-          }
-        ]
-      },
-      {
         "name": "detailDomain",
         "push": "outer",
         "on": [
@@ -182,7 +156,6 @@
       },
       {
         "type": "rect",
-        "name": "brush",
         "encode": {
           "enter": {
             "y": {"value": 0},
@@ -198,7 +171,6 @@
       },
       {
         "type": "rect",
-        "interactive": false,
         "encode": {
           "enter": {
             "y": {"value": 0},
@@ -213,7 +185,6 @@
       },
       {
         "type": "rect",
-        "interactive": false,
         "encode": {
           "enter": {
             "y": {"value": 0},

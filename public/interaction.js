@@ -11,7 +11,6 @@ var page = 0;
 var pieChartFrequency = '1day';
 var indexPie = 0;
 
-
 socket.addEventListener('open', function (event) {
   console.log('Client connects to WS server');
 });
@@ -393,22 +392,36 @@ function renderPage() {
     });
   }
   else if (page == 1) {
-    document.getElementById('pieChartInfo').innerHTML = '';
+  document.getElementById('pieChartInfo').innerHTML = '';
   fetch('charts/stock_prices.json')
   .then(response => response.json())
   .then(spec => {
-    spec.data[0].transform[0] = {"type": "filter", "expr": "datum.ticker === '" + tickers[activeTicker] + "'"};
+    
     vegaEmbed('#barChart', spec).then(({ spec, view }) => {
+
+      function OSCtoCommand(oscMsg) {
+
+        var data = JSON.parse(oscMsg);
+    
+        if (data.address == "/2/radial1") {
+          let brush = view.signal("brush");
+          view.signal("brush", [Math.min(brush[1], data.args * 720), brush[1]]).run();
+          console.log(view.signal("brush"));
+        }
+        else if (data.address == "/2/radial2") {
+          let brush = view.signal("brush");
+          view.signal("brush", [brush[0], Math.max(brush[0], data.args * 720)]).run();
+          console.log(view.signal("brush"));
+        }
+      }
+
+      socket.addEventListener('message', function (event) {
+        OSCtoCommand(event.data);
+      });
+
       // Event listener to change ticker
       document.getElementById('tickerSelect').addEventListener('click', function() {
-        if (page == 1) {
-          spec.data[0].transform[0] = {"type": "filter", "expr": "datum.ticker === '" + tickers[activeTicker] + "'"};
-
-          // Render the updated spec
-          vegaEmbed('#barChart', spec).then(({spec, view}) => {
-            chartView = view;
-          }).catch(console.error);
-      }
+          view.signal("ticker", tickers[activeTicker]).run();
       });
     }).catch(console.error);
   });
@@ -419,6 +432,7 @@ function renderPage() {
     .then(spec => {
         vegaEmbed('#barChart', spec).then(({ spec, view }) => {
           pieChartInfo();
+
           function OSCtoCommand(oscMsg) {
 
             var data = JSON.parse(oscMsg);
