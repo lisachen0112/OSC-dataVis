@@ -5,9 +5,12 @@ var activeTicker = 0;
 var tickers = ['AMZN', 'AAPL', 'NFLX', 'TSLA']
 var prevStepValue  = 0;
 var prevStepValueAddOn = 0;
+var prevStepValuePie = 0;
 var addOnActive = 0;
 var page = 0;
 var pieChartFrequency = '1day';
+var indexPie = 0;
+
 
 socket.addEventListener('open', function (event) {
   console.log('Client connects to WS server');
@@ -72,8 +75,10 @@ socket.addEventListener('message', function (event) {
       if (data.address == "/scroll") {
         scroll(data.args);
       }
-      }
+    }
 });
+
+
 
 function scroll(val) {
   if (mode == 0) {
@@ -226,6 +231,36 @@ function selectChart(val) {
         }]
   }
 }
+
+function pieScroll(val) {
+  var currentStep;
+  if (val >= 0 && val < 0.25) {
+    currentStep = 0;
+  }
+  else if (val >= 0.25 && val < 0.5) {
+    currentStep = 0.25;
+  }
+  else if (val >= 0.5 && val < 0.75) {
+    currentStep = 0.5;
+  }
+  else if (val >= 0.75 && val <= 1) {
+    currentStep = 0.75;
+  }
+
+  if (currentStep > prevStepValuePie || (currentStep == 0 && prevStepValuePie == 0.75)) {
+    indexPie++;
+    if (indexPie > 10) {
+      indexPie = 0;
+    }
+  } else if (currentStep < prevStepValuePie || (currentStep == 0.75 && prevStepValuePie == 0)) {
+    indexPie--;
+    if (indexPie < 0) {
+      indexPie = 0;
+    }
+  }
+  prevStepValuePie = currentStep;
+}
+
 
 function renderPage() {
   if (page == 0) {
@@ -390,6 +425,11 @@ function renderPage() {
                 vegaEmbed('#barChart', spec).then(({spec, view}) => {
                   chartView = view;
                 }).catch(console.error);
+            }
+            else if (data.address == "/3/pieSelect") {
+              pieScroll(data.args);
+        
+              view.signal("selectIndex", indexPie).run()
             }
 
           }
