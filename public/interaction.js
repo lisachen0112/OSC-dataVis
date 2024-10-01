@@ -10,6 +10,27 @@ var addOnActive = 0;
 var page = 0;
 var pieChartFrequency = '1day';
 var indexPie = 0;
+var chart2button = 0;
+
+let stockData = null;
+
+// Function to load JSON data from a file or URL
+async function loadJSON(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error("Network response was not ok");
+        }
+        stockData = await response.json(); // Save the loaded data in the variable
+        console.log("Data loaded successfully:", stockData);
+    } catch (error) {
+        console.error("Error loading JSON:", error);
+    }
+}
+
+(async () => {
+    await loadJSON('data/historical_stock_prices.json');
+})();
 
 socket.addEventListener('open', function (event) {
   console.log('Client connects to WS server');
@@ -28,16 +49,6 @@ socket.addEventListener('message', function (event) {
     if (data.address == "/pager") {
       page = data.args;
       renderPage();
-      // // close search 
-      // socket.send(JSON.stringify({
-      //   address: "/pager/page2/searchButton",
-      //   args: [0]
-      // }));
-
-      // socket.send(JSON.stringify({
-      //   address: "/pager/page1/searchButton",
-      //   args: [0]
-      // }));
 
       const addon = document.getElementById('addOns');
       addon.classList.remove('show');
@@ -272,10 +283,43 @@ function pieChartInfo() {
 
 }
 
+function filterStockData(ticker, date) {
+
+  date = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+
+  const mappedDateISO = date.toISOString();
+
+  // Filter the data for the specific date
+  const filteredData = stockData.filter(item => item.ticker === ticker && item.date === mappedDateISO);
+  console.log(filteredData);
+  return filteredData.length > 0 ? filteredData[0] : null; // Return the first match or null if not found
+}
+
+function tooltipInfo(date) {
+  var tooltip = document.getElementById('tooltipInfo');
+  var d = filterStockData(tickers[activeTicker], date);
+
+  const formatDate = new Date(d.date).toLocaleDateString('en-US', 
+    { year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    }
+  );
+
+  tooltip.innerHTML = 'Ticker: ' + tickers[activeTicker] + '<br>' +
+  'Date: ' + formatDate + '<br>' +
+  'Open: ' + d.open + '<br>' +
+  'High: ' + d.high + '<br>' +
+  'Low: ' + d.low + '<br>' +
+  'Close: ' + d.close + '<br>' +
+  'Volume: ' + d.volume;
+}
+
 
 function renderPage() {
   if (page == 0) {
     document.getElementById('pieChartInfo').innerHTML = '';
+    document.getElementById('tooltipInfo').innerHTML = '';
     fetch('charts/stock-vega-lite.json')
     .then(response => response.json())
     .then(spec => {
@@ -395,9 +439,24 @@ function renderPage() {
   .then(spec => {
     
     vegaEmbed('#barChart', spec).then(({ spec, view }) => {
-      
-      var faderPrevStep = 0;
-      
+      var fader1 = 0.5;
+      var fader2 = 0;
+
+      // reset button
+      chart2button= 0;
+      var oscMessage = {
+        address: "/2/button1",
+        args: [{ type: 'f', value: chart2button}]
+      }
+      socket.send(JSON.stringify(oscMessage));
+
+      // set domain 
+      const minD = new Date(view.signal("timeExtent")[0]);
+      const maxD = new Date(view.signal("timeExtent")[1]);
+      view.signal("detailDomain", [minD, maxD]).run();
+      view.signal("minDate", view.signal("detailDomain")[0]).run();
+      view.signal("maxDate", view.signal("detailDomain")[1]).run();
+
       function OSCtoCommand(oscMsg) {
 
         var data = JSON.parse(oscMsg);
@@ -405,29 +464,71 @@ function renderPage() {
         if (data.address == "/2/radial1") {
           let brush = view.signal("brush");
           view.signal("brush", [Math.min(brush[1], data.args * 720), brush[1]]).run();
-          var faderValue = (brush[0] + ((brush[1] - brush[0]) / 2)) / 720
-          var oscMessage = {
-            address: "/2/fader3",
-            args: [{ type: 'f', value: faderValue}]
-          }
-          console.log(view.signal("brush"));
-          console.log(faderValue);
+          fader1 = (brush[0] + ((brush[1] - brush[0]) / 2)) / 720
 
-          socket.send(JSON.stringify(oscMessage)); // move fader
+          if (chart2button == 0) {
+            var oscMessage = {
+              address: "/2/fader3",
+              args: [{ type: 'f', value: fader1}]
+            }
+            socket.send(JSON.stringify(oscMessage)); // move fader
+          }
+
+          view.signal("minDate", view.signal("detailDomain")[0]).run();
+          view.signal("maxDate", view.signal("detailDomain")[1]).run();
         }
+
         else if (data.address == "/2/radial2") {
           let brush = view.signal("brush");
           view.signal("brush", [brush[0], Math.max(brush[0], data.args * 720)]).run();
-          var faderValue = (brush[0] + ((brush[1] - brush[0]) / 2)) / 720
-          var oscMessage = {
-            address: "/2/fader3",
-            args: [{ type: 'f', value: faderValue}]
+          fader1 = (brush[0] + ((brush[1] - brush[0]) / 2)) / 720
+          if (chart2button == 0) {
+            var oscMessage = {
+              address: "/2/fader3",
+              args: [{ type: 'f', value: fader1}]
+            }
+            socket.send(JSON.stringify(oscMessage)); // move fader
           }
-          console.log(view.signal("brush"));
-          console.log(faderValue);
 
+          view.signal("minDate", view.signal("detailDomain")[0]).run();
+          view.signal("maxDate", view.signal("detailDomain")[1]).run();
+        }
 
-          socket.send(JSON.stringify(oscMessage)); // move fader
+        // TODO
+        else if (data.address == '/2/fader3' && chart2button == 0) {
+          var brush = view.signal("brush");
+          // view.signal("brush", [data.args * 720 - (brush[1] - brush[0]) / 2, data.args * 720 + (brush[1] - brush[0]) / 2]).run();
+          var left = data.args * (720 - brush[1] - brush[0]);
+          view.signal("brush", [left, left + brush[1] - brush[0]]).run();
+        }
+
+        else if (data.address == '/2/fader3' && chart2button == 1) {
+
+          let minD = view.signal("minDate").getTime();
+          let maxD = view.signal("maxDate").getTime();
+          const mappedTimestamp = new Date(minD + data.args[0] * (maxD - minD));
+          
+          view.signal("timeIndex", mappedTimestamp).run();
+          tooltipInfo(mappedTimestamp);
+        }
+
+        else if (data.address == '/2/button1') {
+          chart2button= data.args[0];
+          if (chart2button == 1) {
+            // reset fader
+            var oscMessage = {
+              address: "/2/fader3",
+              args: [{ type: 'f', value: 0}]
+            }
+            socket.send(JSON.stringify(oscMessage));
+          }
+          else {
+            var oscMessage = {
+              address: "/2/fader3",
+              args: [{ type: 'f', value: fader1}]
+            }
+            socket.send(JSON.stringify(oscMessage)); // move fader
+          }
         }
       }
 
@@ -435,14 +536,11 @@ function renderPage() {
         OSCtoCommand(event.data);
       });
 
-      // Event listener to change ticker
-      document.getElementById('tickerSelect').addEventListener('click', function() {
-          view.signal("ticker", tickers[activeTicker]).run();
-      });
     }).catch(console.error);
   });
   }
   else {
+    document.getElementById('tooltipInfo').innerHTML = '';
     fetch('charts/pie-chart.json')
     .then(response => response.json())
     .then(spec => {

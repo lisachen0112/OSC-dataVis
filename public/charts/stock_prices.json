@@ -3,19 +3,6 @@
   "width": 720,
   "height": 480,
   "padding": 5,
-  "signals": [
-    {
-      "name": "detailDomain"
-    },
-    {
-      "name": "ticker",
-      "value": "AMZN"
-    },
-    {
-      "name": "brush", 
-      "value": [0, 720]
-    }
-  ],
   "data": [
     {
       "name": "stocks",
@@ -27,9 +14,38 @@
           "type": "formula",
           "expr": "toDate(datum.date)",
           "as": "datetime"
+        }, 
+        {
+          "type": "extent",
+          "field": "datetime",
+          "signal": "timeExtent"
         }
       ]
     }
+  ],
+  "signals": [
+
+    {
+      "name": "ticker",
+      "value": "AMZN"
+    },
+    {
+      "name": "brush", 
+      "value": [0, 720]
+    },
+    {
+      "name": "detailDomain"
+    },
+    {
+      "name": "timeIndex"
+    },
+    {
+      "name": "minDate"
+    },
+    {
+      "name": "maxDate"
+    }
+
   ],
   "marks": [
     {
@@ -89,6 +105,17 @@
                   "x": {"scale": "xDetail", "field": "datetime"},
                   "y": {"scale": "yDetail", "field": "close"},
                   "y2": {"scale": "yDetail", "value": 0}
+                }
+              }
+            }, 
+            {
+              "type" : "rule",
+              "encode": {
+                "update": {
+                  "x": {"scale": "xDetail", "signal": "timeIndex"},
+                  "y": {"value": 0},
+                  "y2": {"field": {"group": "height"}},
+                  "stroke": {"value": "firebrick"}
                 }
               }
             }
