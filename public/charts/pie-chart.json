@@ -1,11 +1,14 @@
 {
     "$schema": "https://vega.github.io/schema/vega/v5.json",
-    "description": "A basic pie chart example.",
-    "width": 300,
-    "height": 300,
+    "width": {"signal": "chartSize"},
+    "height": {"signal": "chartSize"},
     "padding": 20,
-    "autosize": "none",
+    "autosize": "fit",
     "signals": [
+      {
+        "name": "chartSize",
+        "value": 300
+      },
       {
         "name": "startAngle", "value": 0
       },
@@ -119,7 +122,7 @@
             "fill": {"value": "white"},  
             "align": {"value": "center"},
             "baseline": {"value": "middle"},
-            "text": {"signal": "format(datum.percentage_change, '.2%')"}  
+            "text": {"signal": "datum.sector"}  
           }
         }
       }

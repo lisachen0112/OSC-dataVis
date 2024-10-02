@@ -529,6 +529,10 @@ function renderPage() {
               view.signal("selectIndex", indexPie).run();
               pieChartInfo();
             }
+            else if (data.address == "/3/zoom") {
+              const size = (data.args[0] * 200) + 300;
+              view.signal("chartSize", size).run();
+            }
           }
 
           socket.addEventListener('message', function (event) {
