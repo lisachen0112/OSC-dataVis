@@ -4,6 +4,7 @@ const oscModule = require('./public/osc')
 const server = require('http').createServer(app);
 const WebSocket = require('ws');
 const osc = require('osc');
+const path = require('path');
 // const fs = require('fs');
 // const path = require('path');
 // const yahooFinance = require('yahoo-finance2').default;
@@ -69,8 +70,15 @@ const osc = require('osc');
 
 const port = 8080
 
+
 app.set('view engine', 'ejs')
 app.use(express.static('public'))
+
+// Set the views directory
+app.set('views', path.join(__dirname, 'views'));
+
+// Serve static files (optional, for CSS, JS, images)
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
     res.render('index')
