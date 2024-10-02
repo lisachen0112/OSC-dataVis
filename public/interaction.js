@@ -1,6 +1,6 @@
 const socket = new WebSocket('ws://localhost:8080');
 
-var mode = 0; // default mode 0
+var mode = 0;
 var activeTicker = 0;
 var tickers = ['AMZN', 'AAPL', 'NFLX', 'TSLA']
 var prevStepValue  = 0;
@@ -11,6 +11,7 @@ var page = 0;
 var pieChartFrequency = '1day';
 var indexPie = 0;
 var chart2button = 0;
+var listener = 0;
 
 let stockData = null;
 
@@ -53,9 +54,6 @@ socket.addEventListener('message', function (event) {
       const addon = document.getElementById('addOns');
       addon.classList.remove('show');
       document.getElementById('tickerSelect').style.display = 'none';
-      if (page != 0) {
-        mode = 0;
-      }
     }
 
     if (page == 0) {
@@ -320,6 +318,10 @@ function renderPage() {
   if (page == 0) {
     document.getElementById('pieChartInfo').innerHTML = '';
     document.getElementById('tooltipInfo').innerHTML = '';
+    const items = document.querySelectorAll('.item');
+    items.forEach(item => {
+      item.classList.remove('checked');
+    });
     fetch('charts/stock-vega-lite.json')
     .then(response => response.json())
     .then(spec => {
@@ -329,16 +331,11 @@ function renderPage() {
             function OSCtoCommand(oscMsg) {
         
                 var data = JSON.parse(oscMsg);
-                // console.log(data);
-            
-                if (data.address == "/minRadial") {
-                    minBound(data.args);
-                }
-                else if (data.address == "/radio1") {
+     
+                if (data.address == "/radio1") {
                   spec.vconcat[0].layer[0].layer = selectChart(data.args);
                   // Render the updated spec
                   vegaEmbed('#barChart', spec).then(({spec, view}) => {
-                    chartView = view;
                   }).catch(console.error);
                 }
             }
@@ -355,79 +352,38 @@ function renderPage() {
 
                 // Render the updated spec
                 vegaEmbed('#barChart', spec).then(({spec, view}) => {
-                  chartView = view;
               }).catch(console.error);
             }
             });
             
-            // Event listener to add reference lines
-            const items = document.querySelectorAll('.item');
-            items.forEach(item => {
-              item.addEventListener('keypress', event => {
-                if (event.key === 'Enter') {
-                  item.classList.toggle('checked');
-                  // change spec and rerender
-                  if (item.classList.contains('checked')) {
-                    if (item.id == '7days') {
-                      spec.vconcat[0].layer.push({
-                        "mark": "line",
-                        "encoding": {
-                          "y": {"field": "MVGA7", "type": "quantitative"},
-                          "color": {"value": "red"},
-                          "opacity": {"value": 0.5}
-                        }
-                      })
-                    }
 
-                    if (item.id == '30days') {
-                      spec.vconcat[0].layer.push({
-                        "mark": "line",
-                        "encoding": {
-                          "y": {"field": "MVGA30", "type": "quantitative"},
-                          "color": {"value": "orange"},
-                          "opacity": {"value": 0.5}
-                        }
-                      })
+            if (!listener) {
+              listener = 1;
+              // Event listener to add reference lines
+              const items = document.querySelectorAll('.item');
+              items.forEach(item => {
+                item.addEventListener('keypress', event => {
+  
+                  if (event.key === 'Enter') {
+                    item.classList.toggle('checked');
+                    ind = (item.id == '7days') ? 1 : 2;
+  
+                    // change spec and rerender
+                    if (item.classList.contains('checked')) {
+                        spec.vconcat[0].layer[ind].encoding.opacity.value = 0.5;
                     }
-
+                    else {
+                        spec.vconcat[0].layer[ind].encoding.opacity.value = 0;
+                    }
+  
                     // Render the updated spec
                     vegaEmbed('#barChart', spec).then(({spec, view}) => {
-                      chartView = view;
                     }).catch(console.error);
                   }
-                  else {
-                    if (item.id == '7days') {
-                      var i = 1;
-                      while (i < spec.vconcat[0].layer.length) {
-                        if (spec.vconcat[0].layer[i].encoding.y.field == 'MVGA7') {
-                          spec.vconcat[0].layer.splice(i, 1);
-                        }
-                        i++;
-                      }
-                    }
-
-                    if (item.id == '30days') {
-                      var i = 1;
-                      while (i < spec.vconcat[0].layer.length) {
-                        if (spec.vconcat[0].layer[i].encoding.y.field == 'MVGA30') {
-                          spec.vconcat[0].layer.splice(i, 1);
-                        }
-                        i++;
-                      }
-                      
-                    }
-
-                    // Render the updated spec
-                    vegaEmbed('#barChart', spec).then(({spec, view}) => {
-                      chartView = view;
-                    }).catch(console.error);
-
-                  }
-    
-                  
-                }
+                });
               });
-            });
+            }
+
             
         }).catch(console.error); 
     });
@@ -440,7 +396,6 @@ function renderPage() {
     
     vegaEmbed('#barChart', spec).then(({ spec, view }) => {
       var fader1 = 0.5;
-      var fader2 = 0;
 
       // reset button
       chart2button= 0;

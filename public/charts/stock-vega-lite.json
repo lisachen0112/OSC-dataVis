@@ -43,14 +43,28 @@
         }
       },
       "layer": [
-      {
-        "layer": [{
+        {
           "mark": "line",
           "encoding": {
             "y": {"field": "close", "type": "quantitative"}
           }           
-        }]        
-      }
+        },
+        {
+          "mark": "line",
+          "encoding": {
+            "y": {"field": "MVGA7", "type": "quantitative"},
+            "color": {"value": "red"},
+            "opacity": {"value": 0}
+          }
+        },    
+        {
+          "mark": "line",
+          "encoding": {
+            "y": {"field": "MVGA30", "type": "quantitative"},
+            "color": {"value": "orange"},
+            "opacity": {"value": 0}
+          }
+        }
       ], 
       "width": 700,
       "height": 400
