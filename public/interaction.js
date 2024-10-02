@@ -15,6 +15,17 @@ var listener = 0;
 
 let stockData = null;
 
+var text1 = `- Filter for stocks
+- Add supporting lines 
+- Change the chart type`;
+var text2 = `- Reduce the bounds of the line chart
+- Tooltip to show stock information 
+\n`
+var text3 = `- Change the period of the pie chart 
+- Zoom in and out of the pie chart 
+- Scroll through the pie chart\n
+\n`
+
 // Function to load JSON data from a file or URL
 async function loadJSON(url) {
     try {
@@ -273,10 +284,15 @@ function pieChartInfo() {
     });
 
     var info = document.getElementById('pieChartInfo');
-    info.innerHTML = 'Pie Chart Frequency: ' + pieChartFrequency + '<br>' + 
-    'Sector: ' + data[indexPie].sector + '<br>' + 
-    'Percentage Change: ' + (parseFloat(data[indexPie].percentage_change) * 100).toFixed(2) + '%<br>' +
-    'Weight: ' + (parseFloat(data[indexPie].weight) * 100).toFixed(2) + '%'
+    info.innerHTML = `
+    <div class="tooltip-header">Pie Chart Period: ${pieChartFrequency}</div>
+    <div class="tooltip-content">
+      <div><strong>Sector:</strong> ${data[indexPie].sector}</div>
+      <div><strong>Percentage Change:</strong> ${(parseFloat(data[indexPie].percentage_change) * 100).toFixed(2)}%</div>
+      <div><strong>Weight:</strong> ${(parseFloat(data[indexPie].weight) * 100).toFixed(2)}%</div>
+    </div>
+  `;
+
   });
 
 }
@@ -304,18 +320,32 @@ function tooltipInfo(date) {
     }
   );
 
-  tooltip.innerHTML = 'Ticker: ' + tickers[activeTicker] + '<br>' +
-  'Date: ' + formatDate + '<br>' +
-  'Open: ' + d.open + '<br>' +
-  'High: ' + d.high + '<br>' +
-  'Low: ' + d.low + '<br>' +
-  'Close: ' + d.close + '<br>' +
-  'Volume: ' + d.volume;
+  tooltip.innerHTML = `
+  <div class="tooltip-header">Ticker: ${tickers[activeTicker]}</div>
+  <div class="tooltip-content">
+    <div><strong>Date:</strong> ${formatDate}</div>
+    <div><strong>Open:</strong> ${d.open}</div>
+    <div><strong>High:</strong> ${d.high}</div>
+    <div><strong>Low:</strong> ${d.low}</div>
+    <div><strong>Close:</strong> ${d.close}</div>
+    <div><strong>Volume:</strong> ${d.volume}</div>
+  </div>
+  `;
 }
 
 
 function renderPage() {
   if (page == 0) {
+    try {
+      var oscMessage = {
+        address: "/text1",
+        args: [{ type: 's', value: text1}]
+      }
+      socket.send(JSON.stringify(oscMessage));
+    } catch (error) {
+      console.log("Error sending OSC message:", error);
+    }
+
     document.getElementById('pieChartInfo').innerHTML = '';
     document.getElementById('tooltipInfo').innerHTML = '';
     const items = document.querySelectorAll('.item');
@@ -389,112 +419,123 @@ function renderPage() {
     });
   }
   else if (page == 1) {
-  document.getElementById('pieChartInfo').innerHTML = '';
-  fetch('charts/stock_prices.json')
-  .then(response => response.json())
-  .then(spec => {
-    
-    vegaEmbed('#barChart', spec).then(({ spec, view }) => {
-      var fader1 = 0.5;
+    var oscMessage = {
+      address: "/text1",
+      args: [{ type: 's', value: text2}]
+    }
+    socket.send(JSON.stringify(oscMessage));
+    document.getElementById('pieChartInfo').innerHTML = '';
+    fetch('charts/stock_prices.json')
+    .then(response => response.json())
+    .then(spec => {
+      
+      vegaEmbed('#barChart', spec).then(({ spec, view }) => {
+        view.signal("ticker", tickers[activeTicker]).run();
+        var fader1 = 0.5;
 
-      // reset button
-      chart2button= 0;
-      var oscMessage = {
-        address: "/2/button1",
-        args: [{ type: 'f', value: chart2button}]
-      }
-      socket.send(JSON.stringify(oscMessage));
+        // reset button
+        chart2button= 0;
+        var oscMessage = {
+          address: "/2/button1",
+          args: [{ type: 'f', value: chart2button}]
+        }
+        socket.send(JSON.stringify(oscMessage));
 
-      // set domain 
-      const minD = new Date(view.signal("timeExtent")[0]);
-      const maxD = new Date(view.signal("timeExtent")[1]);
-      view.signal("detailDomain", [minD, maxD]).run();
-      view.signal("minDate", view.signal("detailDomain")[0]).run();
-      view.signal("maxDate", view.signal("detailDomain")[1]).run();
+        // set domain 
+        const minD = new Date(view.signal("timeExtent")[0]);
+        const maxD = new Date(view.signal("timeExtent")[1]);
+        view.signal("detailDomain", [minD, maxD]).run();
+        view.signal("minDate", view.signal("detailDomain")[0]).run();
+        view.signal("maxDate", view.signal("detailDomain")[1]).run();
 
-      function OSCtoCommand(oscMsg) {
+        function OSCtoCommand(oscMsg) {
 
-        var data = JSON.parse(oscMsg);
-    
-        if (data.address == "/2/radial1") {
-          let brush = view.signal("brush");
-          view.signal("brush", [Math.min(brush[1], data.args * 720), brush[1]]).run();
-          fader1 = (brush[0] + ((brush[1] - brush[0]) / 2)) / 720
+          var data = JSON.parse(oscMsg);
+      
+          if (data.address == "/2/radial1") {
+            let brush = view.signal("brush");
+            view.signal("brush", [Math.min(brush[1], data.args * 720), brush[1]]).run();
+            fader1 = (brush[0] + ((brush[1] - brush[0]) / 2)) / 720
 
-          if (chart2button == 0) {
-            var oscMessage = {
-              address: "/2/fader3",
-              args: [{ type: 'f', value: fader1}]
+            if (chart2button == 0) {
+              var oscMessage = {
+                address: "/2/fader3",
+                args: [{ type: 'f', value: fader1}]
+              }
+              socket.send(JSON.stringify(oscMessage)); // move fader
             }
-            socket.send(JSON.stringify(oscMessage)); // move fader
+
+            view.signal("minDate", view.signal("detailDomain")[0]).run();
+            view.signal("maxDate", view.signal("detailDomain")[1]).run();
           }
 
-          view.signal("minDate", view.signal("detailDomain")[0]).run();
-          view.signal("maxDate", view.signal("detailDomain")[1]).run();
-        }
-
-        else if (data.address == "/2/radial2") {
-          let brush = view.signal("brush");
-          view.signal("brush", [brush[0], Math.max(brush[0], data.args * 720)]).run();
-          fader1 = (brush[0] + ((brush[1] - brush[0]) / 2)) / 720
-          if (chart2button == 0) {
-            var oscMessage = {
-              address: "/2/fader3",
-              args: [{ type: 'f', value: fader1}]
+          else if (data.address == "/2/radial2") {
+            let brush = view.signal("brush");
+            view.signal("brush", [brush[0], Math.max(brush[0], data.args * 720)]).run();
+            fader1 = (brush[0] + ((brush[1] - brush[0]) / 2)) / 720
+            if (chart2button == 0) {
+              var oscMessage = {
+                address: "/2/fader3",
+                args: [{ type: 'f', value: fader1}]
+              }
+              socket.send(JSON.stringify(oscMessage)); // move fader
             }
-            socket.send(JSON.stringify(oscMessage)); // move fader
+
+            view.signal("minDate", view.signal("detailDomain")[0]).run();
+            view.signal("maxDate", view.signal("detailDomain")[1]).run();
           }
 
-          view.signal("minDate", view.signal("detailDomain")[0]).run();
-          view.signal("maxDate", view.signal("detailDomain")[1]).run();
-        }
-
-        // TODO
-        else if (data.address == '/2/fader3' && chart2button == 0) {
-          var brush = view.signal("brush");
-          // view.signal("brush", [data.args * 720 - (brush[1] - brush[0]) / 2, data.args * 720 + (brush[1] - brush[0]) / 2]).run();
-          var left = data.args * (720 - brush[1] - brush[0]);
-          view.signal("brush", [left, left + brush[1] - brush[0]]).run();
-        }
-
-        else if (data.address == '/2/fader3' && chart2button == 1) {
-
-          let minD = view.signal("minDate").getTime();
-          let maxD = view.signal("maxDate").getTime();
-          const mappedTimestamp = new Date(minD + data.args[0] * (maxD - minD));
-          
-          view.signal("timeIndex", mappedTimestamp).run();
-          tooltipInfo(mappedTimestamp);
-        }
-
-        else if (data.address == '/2/button1') {
-          chart2button= data.args[0];
-          if (chart2button == 1) {
-            // reset fader
-            var oscMessage = {
-              address: "/2/fader3",
-              args: [{ type: 'f', value: 0}]
-            }
-            socket.send(JSON.stringify(oscMessage));
+          // TODO
+          else if (data.address == '/2/fader3' && chart2button == 0) {
+            var brush = view.signal("brush");
+            // view.signal("brush", [data.args * 720 - (brush[1] - brush[0]) / 2, data.args * 720 + (brush[1] - brush[0]) / 2]).run();
+            var left = data.args * (720 - brush[1] - brush[0]);
+            view.signal("brush", [left, left + brush[1] - brush[0]]).run();
           }
-          else {
-            var oscMessage = {
-              address: "/2/fader3",
-              args: [{ type: 'f', value: fader1}]
+
+          else if (data.address == '/2/fader3' && chart2button == 1) {
+
+            let minD = view.signal("minDate").getTime();
+            let maxD = view.signal("maxDate").getTime();
+            const mappedTimestamp = new Date(minD + data.args[0] * (maxD - minD));
+            
+            view.signal("timeIndex", mappedTimestamp).run();
+            tooltipInfo(mappedTimestamp);
+          }
+
+          else if (data.address == '/2/button1') {
+            chart2button= data.args[0];
+            if (chart2button == 1) {
+              // reset fader
+              var oscMessage = {
+                address: "/2/fader3",
+                args: [{ type: 'f', value: 0}]
+              }
+              socket.send(JSON.stringify(oscMessage));
             }
-            socket.send(JSON.stringify(oscMessage)); // move fader
+            else {
+              var oscMessage = {
+                address: "/2/fader3",
+                args: [{ type: 'f', value: fader1}]
+              }
+              socket.send(JSON.stringify(oscMessage)); // move fader
+            }
           }
         }
-      }
 
-      socket.addEventListener('message', function (event) {
-        OSCtoCommand(event.data);
-      });
+        socket.addEventListener('message', function (event) {
+          OSCtoCommand(event.data);
+        });
 
-    }).catch(console.error);
-  });
+      }).catch(console.error);
+    });
   }
   else {
+    var oscMessage = {
+      address: "/text1",
+      args: [{ type: 's', value: text3}]
+    }
+    socket.send(JSON.stringify(oscMessage));
     document.getElementById('tooltipInfo').innerHTML = '';
     fetch('charts/pie-chart.json')
     .then(response => response.json())
