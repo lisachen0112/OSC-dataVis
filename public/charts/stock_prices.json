@@ -47,6 +47,12 @@
     }
 
   ],
+  "title": {
+    "text": {"signal" : "ticker + ' Closing Stock Price'"},
+    "anchor": "middle",
+    "frame": "group",
+    "offset": 4
+  },
   "marks": [
     {
       "type": "group",

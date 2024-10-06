@@ -19,12 +19,10 @@ var text1 = `- Filter for stocks
 - Add supporting lines 
 - Change the chart type`;
 var text2 = `- Reduce the bounds of the line chart
-- Tooltip to show stock information 
-\n`
-var text3 = `- Change the period of the pie chart 
-- Zoom in and out of the pie chart 
-- Scroll through the pie chart\n
-\n`
+- Tooltip to show stock information`;
+var text3 = `- Change perfomance period 
+- Zoom in the pie chart 
+- Scroll through the pie chart`;
 
 // Function to load JSON data from a file or URL
 async function loadJSON(url) {
@@ -65,6 +63,9 @@ socket.addEventListener('message', function (event) {
       const addon = document.getElementById('addOns');
       addon.classList.remove('show');
       document.getElementById('tickerSelect').style.display = 'none';
+      document.getElementById('overlay').style.display = 'none';
+
+      // reset buttons page1
     }
 
     if (page == 0) {
@@ -171,6 +172,7 @@ function closeSearch() {
       option.children[activeTicker].click();
 
       document.getElementById('tickerSelect').style.display = 'none';
+      document.getElementById('overlay').style.display = 'none';
     }
   }
 
@@ -184,6 +186,7 @@ function closeSearch() {
 function search() { 
   if (mode == 0) {
     document.getElementById('tickerSelect').style.display = 'flex';
+    document.getElementById('overlay').style.display = 'block';
     var option = document.getElementById('options-container');
 
     option.children[activeTicker].focus();
@@ -356,6 +359,8 @@ function renderPage() {
     .then(response => response.json())
     .then(spec => {
         spec.transform[0].filter = "datum.ticker === '" + tickers[activeTicker] + "'";
+        spec.title.text = tickers[activeTicker] + ' Closing Stock Price';
+        
         vegaEmbed('#barChart', spec).then(({spec, view}) => {
 
             function OSCtoCommand(oscMsg) {
@@ -379,7 +384,7 @@ function renderPage() {
             document.getElementById('tickerSelect').addEventListener('click', function() {
               if (page == 0) {
                 spec.transform[0].filter = "datum.ticker === '" + tickers[activeTicker] + "'";
-
+                spec.title.text = tickers[activeTicker] + ' Closing Stock Price';
                 // Render the updated spec
                 vegaEmbed('#barChart', spec).then(({spec, view}) => {
               }).catch(console.error);
