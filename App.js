@@ -106,9 +106,9 @@ oscModule.on("ready", () => {
 
 oscModule.on("message", (oscMsg, timeTag, info) => {
     console.log("Received OSC message:");
-    console.log("Address: ", oscMsg.address); // The OSC address pattern (e.g., "/fader1")
-    console.log("Arguments: ", oscMsg.args);   // Array of arguments sent with the message
-    console.log("Remote info: ", info);         // Information about the sender (IP, port)
+    console.log("Address: ", oscMsg.address);
+    console.log("Arguments: ", oscMsg.args);
+    console.log("Remote info: ", info);
     wss.clients.forEach(function each(client) {
         if (client.readyState === WebSocket.OPEN) {
             client.send(JSON.stringify(oscMsg));

@@ -490,11 +490,9 @@ function renderPage() {
             view.signal("maxDate", view.signal("detailDomain")[1]).run();
           }
 
-          // TODO
           else if (data.address == '/2/fader3' && chart2button == 0) {
             var brush = view.signal("brush");
-            // view.signal("brush", [data.args * 720 - (brush[1] - brush[0]) / 2, data.args * 720 + (brush[1] - brush[0]) / 2]).run();
-            var left = data.args * (720 - brush[1] - brush[0]);
+            var left = data.args * (720 - (brush[1] - brush[0]));
             view.signal("brush", [left, left + brush[1] - brush[0]]).run();
           }
 
